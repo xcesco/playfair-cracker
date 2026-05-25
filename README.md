@@ -302,6 +302,9 @@ Verificare che i file `.npy` nella directory n-grammi siano per alfabeto 25 lett
 - Lineare con lunghezza cifrato
 - Sub-lineare con numero workers (overhead comunicazione)
 
+## Documentazione
+Per la documentaizone si consulti [INDICE_DOCUMENTAZIONE.md](INDICE_DOCUMENTAZIONE.md)
+
 ## Licenza
 
 MIT License
