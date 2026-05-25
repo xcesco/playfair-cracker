@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Playfair Digram Lab v30</title>
+<style>
+:root{--bg:#0f172a;--panel:#111827;--muted:#94a3b8;--text:#e5e7eb;--accent:#38bdf8;--accent2:#a78bfa;--border:rgba(148,163,184,.24);--good:#34d399;--warn:#fbbf24;--danger:#fb7185;--radius:18px;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;font-family:var(--sans);background:radial-gradient(circle at 20% 10%,rgba(56,189,248,.14),transparent 30%),radial-gradient(circle at 80% 0,rgba(167,139,250,.14),transparent 28%),var(--bg);color:var(--text);min-height:100vh}header{padding:26px clamp(16px,4vw,42px) 15px;border-bottom:1px solid var(--border);background:rgba(15,23,42,.76);backdrop-filter:blur(12px);position:sticky;top:0;z-index:5}h1{margin:0;font-size:clamp(1.5rem,3vw,2.3rem);letter-spacing:-.03em}.subtitle{margin:8px 0 0;color:var(--muted);max-width:1250px;line-height:1.45}main{padding:20px clamp(16px,4vw,42px) 42px}.grid{display:grid;grid-template-columns:minmax(320px,1.05fr) minmax(420px,1.55fr);gap:18px;align-items:start}.workspace{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-top:18px}.seqgrid{display:grid;grid-template-columns:.78fr 1.22fr;gap:18px;margin-top:18px}.triple{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-top:18px}@media(max-width:1120px){header{position:static}.grid,.workspace,.seqgrid,.triple{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,rgba(17,24,39,.96),rgba(15,23,42,.96));border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 18px 50px rgba(0,0,0,.28);overflow:hidden}.card-head{padding:15px 17px;display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid var(--border);background:rgba(255,255,255,.025)}.card h2{margin:0;font-size:1.04rem}.card-body{padding:16px 18px 18px}label{display:block;color:var(--muted);font-size:.84rem;margin:12px 0 7px}textarea,input,select{width:100%;border:1px solid var(--border);background:rgba(2,6,23,.65);color:var(--text);border-radius:14px;padding:11px 12px;font:.95rem var(--mono);outline:none}textarea:focus,input:focus,select:focus{border-color:rgba(56,189,248,.72);box-shadow:0 0 0 3px rgba(56,189,248,.13)}textarea{min-height:230px;resize:vertical;line-height:1.55}button{border:1px solid var(--border);border-radius:13px;color:var(--text);background:rgba(255,255,255,.06);padding:10px 12px;cursor:pointer;font-weight:700}button:hover{background:rgba(255,255,255,.10)}.primary{background:linear-gradient(135deg,rgba(56,189,248,.95),rgba(167,139,250,.95));color:#07111f;border:0}.danger{color:#fecdd3;border-color:rgba(251,113,133,.35)}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1;min-width:130px}.checks{display:grid;gap:8px;margin-top:12px}.check{display:flex;gap:9px;align-items:center;color:var(--muted);font-size:.9rem}.check input{width:auto}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}.stat{background:rgba(255,255,255,.045);border:1px solid var(--border);border-radius:14px;padding:11px}.stat .num{font-size:1.2rem;font-weight:850}.stat .lbl{color:var(--muted);font-size:.78rem;margin-top:2px}.alert{padding:12px 14px;border-radius:14px;margin-top:12px;border:1px solid var(--border);color:var(--muted);line-height:1.4}.alert.good{border-color:rgba(52,211,153,.38);background:rgba(52,211,153,.07);color:#bbf7d0}.alert.warn{border-color:rgba(251,191,36,.38);background:rgba(251,191,36,.07);color:#fde68a}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar button,.toolbar select{flex:0 0 auto}.digram-board,.plain-output{background:rgba(2,6,23,.54);border:1px solid var(--border);border-radius:16px;padding:14px;font-family:var(--mono);line-height:2.1}.digram-board{min-height:280px;max-height:540px;overflow:auto;display:flex;flex-wrap:wrap;align-content:flex-start;align-items:flex-start;gap:0}.plain-output{min-height:96px;max-height:260px;overflow:auto;white-space:pre-wrap;word-break:break-word;line-height:1.75}.chip{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:52px;border-radius:10px;border:1px solid rgba(255,255,255,.18);margin:3px 4px 3px 0;padding:6px 8px;color:#07111f;cursor:pointer;user-select:none;box-shadow:inset 0 -1px 0 rgba(0,0,0,.14);line-height:1.05}.chip:hover{outline:2px solid rgba(255,255,255,.36)}.chip.selected{outline:3px solid var(--accent)}.chip.seqmatch{outline:3px solid var(--warn);filter:saturate(1.25) brightness(1.08)}.idx{opacity:.68;font-size:.72em}.chip .hyp{background:transparent;border-radius:0;padding:0;color:#020617;font-weight:950;letter-spacing:.055em;font-size:1.02em;line-height:1;text-shadow:0 1px 0 rgba(255,255,255,.18)}.chip .hyp.empty{color:rgba(71,85,105,.82);opacity:1;font-weight:850;text-shadow:0 1px 0 rgba(255,255,255,.16)}.chip .board-hyp-input{width:42px;min-width:42px;padding:2px 4px;border-radius:7px;text-align:center;text-transform:uppercase;font:950 1.02em var(--mono);line-height:1;background:rgba(255,255,255,.82);color:#020617;border:1px solid rgba(15,23,42,.36);box-shadow:0 0 0 2px rgba(56,189,248,.20)}.chip .chip-meta{display:flex;align-items:baseline;justify-content:center;gap:4px;line-height:1;white-space:nowrap}.chip .cipher-sub,.chip .idx-sup{color:rgba(30,41,59,.68);font-weight:760;letter-spacing:.045em;text-shadow:0 1px 0 rgba(255,255,255,.20);line-height:1}.chip .cipher-sub{font-size:.62em}.chip .idx-sup{font-size:.58em;position:relative;top:-.18em}.hyp{background:rgba(255,255,255,.55);border-radius:7px;padding:1px 5px;font-weight:850;letter-spacing:.05em}.hyp.empty{opacity:.46}.break{display:block;height:8px}.muted{color:var(--muted)}.tiny{font-size:.78rem}.pill{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:3px 8px;color:var(--muted);font-size:.78rem;margin-left:4px}.list-wrap{max-height:520px;overflow:auto;border:1px solid var(--border);border-radius:16px}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:8px 7px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}th{color:var(--muted);font-size:.78rem;font-weight:800;position:sticky;top:0;background:#111827;z-index:2}td.mono{font-family:var(--mono);font-weight:850;letter-spacing:.06em}.mini-input{min-width:72px;padding:7px 8px;text-transform:uppercase;text-align:center}.swatch{display:inline-block;width:18px;height:18px;border-radius:6px;border:1px solid rgba(255,255,255,.25);vertical-align:middle}.matrix{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;max-width:360px}.cell{border:1px solid var(--border);border-radius:10px;text-align:center;padding:10px;background:rgba(255,255,255,.045);font-family:var(--mono);font-weight:850}.footer-note{color:var(--muted);font-size:.82rem;margin-top:12px;line-height:1.45}.seq-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer}.seq-item:hover{background:rgba(255,255,255,.05)}.seq-item.active{background:rgba(251,191,36,.10);outline:1px solid rgba(251,191,36,.45)}.seq-title{font-family:var(--mono);font-weight:850;letter-spacing:.05em}.seq-meta{color:var(--muted);font-size:.8rem;margin-top:3px}.context{font-family:var(--mono);font-size:.82rem;color:#cbd5e1;line-height:1.8}.context mark{background:rgba(251,191,36,.28);color:#fff;border-radius:5px;padding:1px 3px}.badge{display:inline-block;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:999px;padding:2px 7px;font-size:.76rem;color:#cbd5e1;margin:2px 4px 2px 0}.kbd{font-family:var(--mono);font-size:.78rem;border:1px solid var(--border);border-radius:6px;padding:1px 5px;background:rgba(255,255,255,.06)}.resolved{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.pair{font-family:var(--mono);border:1px solid var(--border);border-radius:8px;padding:3px 7px;background:rgba(255,255,255,.06)}.pair.clickable{cursor:pointer}.pair.clickable:hover{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.48)}.pair .c{font-weight:850;color:#e0f2fe}.pair .p{color:#bbf7d0}.pair .u{color:#fca5a5}.italian-list{display:flex;flex-wrap:wrap;gap:6px}.italian-chip{border:1px solid var(--border);border-radius:10px;padding:6px 9px;background:rgba(255,255,255,.055);font-family:var(--mono);cursor:pointer}.italian-chip:hover{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.5)}.italian-chip.used{background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.36)}.arrow{color:var(--muted);font-weight:900}.rank{color:var(--muted);font-size:.75rem;margin-right:4px}.freq-pill{display:inline-block;margin-left:6px;color:#fed7aa;font-size:.76rem;border:1px solid rgba(251,146,60,.34);border-radius:999px;padding:1px 6px;background:rgba(251,146,60,.10)}.assign-row{background:rgba(255,255,255,.02)}.status-cell{text-align:center;white-space:nowrap}.status-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;border:1px solid var(--border);font-size:1rem;background:rgba(255,255,255,.055)}.status-icon.ok{color:#bbf7d0;border-color:rgba(52,211,153,.42);background:rgba(52,211,153,.10)}.status-icon.empty{color:#cbd5e1}.status-icon.dup{color:#fecaca;border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.16)}.status-icon.note{color:#fde68a;border-color:rgba(251,191,36,.46);background:rgba(251,191,36,.10)}.status-icon.locked{color:#fde68a;border-color:rgba(251,191,36,.70);background:rgba(251,191,36,.18)}.status-icon-btn{border:0;background:transparent;padding:0;cursor:pointer}.status-icon-btn:hover .status-icon{transform:scale(1.08);box-shadow:0 0 0 3px rgba(251,191,36,.14)}.locked-input{opacity:.75;cursor:not-allowed}.locked-row{background:rgba(251,191,36,.075)!important}
+
+.chip.selected{outline:4px solid #fb923c!important;box-shadow:0 0 0 4px rgba(249,115,22,.28), inset 0 -1px 0 rgba(0,0,0,.14)}
+.chip.seqmatch{outline:4px solid #f97316!important;filter:saturate(1.45) brightness(1.10);box-shadow:0 0 0 4px rgba(249,115,22,.26)}
+tr.conflict{background:rgba(239,68,68,.13)!important;outline:1px solid rgba(239,68,68,.42)}
+input.conflict,select.conflict{border-color:#ef4444!important;box-shadow:0 0 0 3px rgba(239,68,68,.16)!important;background:rgba(127,29,29,.35)!important;color:#fecaca!important}
+.conflict-text{color:#fecaca;font-weight:800}.warnbox{border:1px solid rgba(239,68,68,.45);background:rgba(127,29,29,.25);color:#fecaca;border-radius:14px;padding:10px 12px;margin:10px 0;font-size:.86rem;line-height:1.4}.hidden{display:none!important}
+.dropgrid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin:10px 0 12px}.dropzone{min-height:48px;border:2px dashed rgba(148,163,184,.35);border-radius:14px;background:rgba(255,255,255,.04);padding:10px;font-family:var(--mono);display:flex;align-items:center;justify-content:center;color:var(--muted)}.dropzone.ready{border-color:#fb923c;background:rgba(249,115,22,.12);color:#fed7aa}.dropzone.filled{border-style:solid;border-color:#38bdf8;color:#e0f2fe}.dropzone strong{color:#fff}.chart-wrap{display:grid;gap:9px;max-height:520px;overflow:auto}.bar-row{display:grid;grid-template-columns:52px 72px 1fr 72px 1fr;gap:8px;align-items:center;font-size:.84rem}.bar-label{font-family:var(--mono);font-weight:850}.barbox{height:18px;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.05)}.bar-msg{height:100%;background:linear-gradient(90deg,#38bdf8,#0ea5e9)}.bar-it{height:100%;background:linear-gradient(90deg,#fb923c,#f97316)}.chart-head{color:var(--muted);font-size:.78rem;font-weight:800}.matrix-candidate{border:1px solid var(--border);border-radius:14px;padding:10px;margin-top:10px;background:rgba(255,255,255,.035)}.matrix-key{font-family:var(--mono);font-size:.82rem;color:#dbeafe;border:1px solid rgba(59,130,246,.35);border-radius:10px;padding:5px 7px;background:rgba(59,130,246,.08);display:inline-block;margin-top:7px;word-break:break-all}.matrix-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.matrix-actions button{padding:7px 9px;font-size:.82rem}.matrix-mini{display:grid;grid-template-columns:repeat(5,34px);gap:4px;margin-top:8px}.matrix-mini span{border:1px solid var(--border);border-radius:7px;text-align:center;padding:6px 0;font-family:var(--mono);font-weight:800;background:rgba(255,255,255,.055)}.freq-split{display:grid;grid-template-columns:1fr 1fr;gap:14px}.freq-panel{border:1px solid var(--border);border-radius:16px;padding:12px;background:rgba(255,255,255,.035);min-width:0}.freq-title{font-weight:850;margin-bottom:9px}.freq-sub{color:var(--muted);font-size:.78rem;margin-top:-5px;margin-bottom:9px}@media(max-width:900px){.freq-split{grid-template-columns:1fr}}
+@media(max-width:760px){.dropgrid{grid-template-columns:1fr}.bar-row{grid-template-columns:44px 60px 1fr;}.bar-row .itpct,.bar-row .itbar{display:none}}
+.digram-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.digram-stat-card{background:rgba(255,255,255,.045);border:1px solid var(--border);border-radius:14px;padding:11px}.digram-stat-card .value{font-size:1.15rem;font-weight:850}.digram-stat-card .label{color:var(--muted);font-size:.78rem;margin-top:2px}.digram-stat-card .hint{color:#cbd5e1;font-size:.72rem;margin-top:5px;line-height:1.35}.signal-list{display:grid;gap:8px;margin-top:10px}.signal-item{border:1px solid var(--border);border-radius:12px;padding:9px 10px;background:rgba(255,255,255,.04);font-size:.86rem;line-height:1.4}.signal-item.good{border-color:rgba(52,211,153,.42);background:rgba(52,211,153,.08);color:#bbf7d0}.signal-item.warn{border-color:rgba(251,191,36,.42);background:rgba(251,191,36,.08);color:#fde68a}.signal-item.bad{border-color:rgba(239,68,68,.42);background:rgba(239,68,68,.10);color:#fecaca}.topdig-table td,.topdig-table th{font-size:.84rem}.pos-list{font-family:var(--mono);color:#cbd5e1;font-size:.78rem}
+@media(max-width:900px){.digram-stats-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.digram-stats-grid{grid-template-columns:1fr}}
+
+
+.seq-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.seq-head .seq-title{flex:1;min-width:0}.seq-copy-btn{flex:0 0 auto;padding:5px 8px;border-radius:9px;font-size:.76rem;background:rgba(249,115,22,.16);border-color:rgba(249,115,22,.55);color:#fed7aa}.seq-copy-btn:hover{background:rgba(249,115,22,.26);border-color:rgba(249,115,22,.78)}.seq-decoded-line{font-family:var(--mono);margin-top:6px;padding:6px 8px;border:1px solid rgba(52,211,153,.28);background:rgba(52,211,153,.075);border-radius:10px;color:#bbf7d0;line-height:1.45}.seq-decoded-line .muted{color:#86efac;opacity:.78;margin-right:6px}.copy-toast{position:fixed;z-index:9999;background:#16a34a;color:#052e16;border:1px solid rgba(187,247,208,.75);box-shadow:0 10px 28px rgba(0,0,0,.35);border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:850;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .18s ease,transform .18s ease}.copy-toast.show{opacity:1;transform:translateY(0)}.seq-len-stats{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.len-badge{border:1px solid var(--border);border-radius:999px;padding:4px 8px;background:rgba(255,255,255,.055);color:#cbd5e1;font-size:.78rem;cursor:pointer}.len-badge:hover{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.48)}.len-badge.active{background:rgba(249,115,22,.18);border-color:rgba(249,115,22,.72);color:#fed7aa}.len-badge .count{font-weight:850;color:#fff}
+.hyp-io-panel{border:1px solid var(--border);border-radius:16px;margin-top:12px;background:rgba(255,255,255,.035);overflow:hidden}.hyp-io-panel[open]{box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}.hyp-io-toggle{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;cursor:pointer;color:#e5e7eb;font-weight:850}.hyp-io-toggle::-webkit-details-marker{display:none}.hyp-io-toggle:after{content:"+";display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.06);color:#cbd5e1;font-family:var(--mono);font-weight:900}.hyp-io-panel[open] .hyp-io-toggle:after{content:"−"}.hyp-io-content{padding:0 12px 12px;border-top:1px solid var(--border)}.hyp-io-content label{margin-top:12px}.hyp-io-panel textarea{min-height:116px;font-size:.86rem}.hyp-io-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.hyp-io-actions button{flex:0 0 auto}.hyp-io-summary{margin-top:8px;font-size:.82rem;line-height:1.4}.hyp-io-summary.good{color:#bbf7d0}.hyp-io-summary.warn{color:#fde68a}.hyp-io-summary.bad{color:#fecaca}.hyp-io-help{color:var(--muted);font-size:.78rem;line-height:1.4;margin-top:7px}
+
+
+/* v29 — controlli strutturali Playfair sui digrammi cifrati allineati */
+.pf-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.pf-check-card{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(255,255,255,.04)}
+.pf-check-card.good{border-color:rgba(52,211,153,.42);background:rgba(52,211,153,.08);color:#bbf7d0}
+.pf-check-card.warn{border-color:rgba(251,191,36,.42);background:rgba(251,191,36,.08);color:#fde68a}
+.pf-check-card.bad{border-color:rgba(239,68,68,.48);background:rgba(239,68,68,.12);color:#fecaca}
+.pf-check-title{font-weight:900;margin-bottom:6px}.pf-check-meta{color:var(--muted);font-size:.82rem;line-height:1.45}.pf-check-card.good .pf-check-meta,.pf-check-card.warn .pf-check-meta,.pf-check-card.bad .pf-check-meta{color:inherit;opacity:.9}
+.pf-doubles{margin-top:8px;font-family:var(--mono);font-size:.84rem;line-height:1.65}.bad-digram{display:inline-block;border:1px solid rgba(239,68,68,.55);color:#fecaca;background:rgba(239,68,68,.14);border-radius:8px;padding:2px 6px;margin:2px 4px 2px 0}.pf-ok-digram{display:inline-block;border:1px solid rgba(52,211,153,.42);color:#bbf7d0;background:rgba(52,211,153,.08);border-radius:8px;padding:2px 6px;margin:2px 4px 2px 0}
+.pf-verdict{margin-top:12px;border-radius:14px;border:1px solid var(--border);padding:12px 14px;line-height:1.45}.pf-verdict.good{color:#bbf7d0;border-color:rgba(52,211,153,.42);background:rgba(52,211,153,.08)}.pf-verdict.warn{color:#fde68a;border-color:rgba(251,191,36,.42);background:rgba(251,191,36,.08)}.pf-verdict.bad{color:#fecaca;border-color:rgba(239,68,68,.48);background:rgba(239,68,68,.12)}
+.pf-mini-table{width:100%;margin-top:10px;border-collapse:collapse;font-size:.82rem}.pf-mini-table th,.pf-mini-table td{padding:6px;border-bottom:1px solid var(--border)}.pf-mini-table th{position:static;background:transparent;color:inherit;opacity:.75}
+.chip.double-digram{outline:4px solid #ef4444!important;box-shadow:0 0 0 4px rgba(239,68,68,.28), inset 0 -1px 0 rgba(0,0,0,.14)}
+.chip.locked .hyp{text-decoration:underline;text-decoration-color:#000000;text-decoration-thickness:2px;text-underline-offset:2px}
+
+/* Context menu per chip */
+.chip-context-menu{position:fixed;z-index:9999;background:linear-gradient(180deg,rgba(17,24,39,.98),rgba(15,23,42,.98));border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);padding:4px;min-width:180px;display:none}
+.chip-context-menu.show{display:block}
+.context-menu-item{padding:8px 12px;cursor:pointer;border-radius:8px;color:var(--text);font-size:.88rem;display:flex;align-items:center;gap:8px;transition:background .15s ease}
+.context-menu-item:hover{background:rgba(56,189,248,.15)}
+.context-menu-item .icon{font-size:1rem;width:18px;text-align:center}
+.context-menu-separator{height:1px;background:var(--border);margin:4px 0}
+.context-menu-item.danger{color:#fca5a5}
+.context-menu-item.danger:hover{background:rgba(239,68,68,.15)}
+.context-menu-item.disabled{opacity:.4;cursor:not-allowed}
+.context-menu-item.disabled:hover{background:transparent}
+
+@media(max-width:900px){.pf-check-grid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<header><h1>Playfair Digram Lab v30</h1><p class="subtitle">Analisi di un crittogramma compatibile con Playfair: digrammi, sequenze ricorrenti filtrabili, ipotesi manuali, assegnazione guidata verso digrammi frequenti italiani e prova di decifratura con matrice 5×5. <strong>v30: applicazione automatica delle trasformazioni Playfair ai pannelli 2 e 5.</strong></p></header>
+<main>
+<div class="grid">
+<section class="card"><div class="card-head"><h2>1. Testo cifrato</h2><span class="pill">input</span></div><div class="card-body">
+<label for="cipherInput">Incolla qui il messaggio cifrato</label><textarea id="cipherInput" placeholder="Incolla il crittogramma qui..."></textarea>
+<div class="checks"><label class="check"><input type="checkbox" id="removeNonLetters" checked> Rimuovi spazi, numeri e punteggiatura</label><label class="check"><input type="checkbox" id="mapJ" checked> Normalizza J → I</label><label class="check"><input type="checkbox" id="showIndex" checked> Mostra indice progressivo dei digrammi</label></div>
+<div class="row" style="margin-top:14px"><button class="primary" id="analyzeBtn">Analizza</button><button id="sampleBtn">Carica esempio</button><button class="danger" id="clearBtn">Pulisci</button></div>
+<div class="row" style="margin-top:10px"><button id="exportBtn">Salva configurazione</button><button id="importBtn">Carica configurazione</button><input id="importFile" type="file" accept="application/json" style="display:none"></div>
+<div class="stats"><div class="stat"><div class="num" id="lenStat">0</div><div class="lbl">lettere</div></div><div class="stat"><div class="num" id="digramStat">0</div><div class="lbl">digrammi</div></div><div class="stat"><div class="num" id="uniqueStat">0</div><div class="lbl">digrammi unici</div></div><div class="stat"><div class="num" id="alphaStat">0</div><div class="lbl">alfabeto</div></div></div>
+<div id="playfairHint" class="alert">Inserisci un testo per ottenere il controllo su J, alfabeto e parità della lunghezza.</div>
+</div></section>
+<section class="card"><div class="card-head"><h2>2. Vista digrammi</h2><div class="toolbar"><input id="boardFilter" placeholder="digramma, ipotesi o sequenza" style="max-width:190px"><select id="boardStatusFilter"><option value="all">Tutti</option><option value="solved">Risolti</option><option value="unsolved">Non risolti</option><option value="locked">Bloccati</option><option value="double">Doppi Playfair</option></select><select id="sortMode"><option value="pos">Ordine del testo</option><option value="freq">Frequenza digramma</option><option value="alpha">Ordine alfabetico</option></select></div></div><div class="card-body">
+<div class="dropgrid"><div><label>Scambio ipotesi: trascina qui il primo digramma</label><div id="swapA" class="dropzone" data-slot="A">rilascia digramma A</div></div><div><label>Trascina qui il secondo digramma</label><div id="swapB" class="dropzone" data-slot="B">rilascia digramma B</div></div><button id="swapHypBtn">Scambia valori</button></div>
+<div class="digram-board" id="digramBoard"></div><label>Output delle ipotesi manuali digramma → chiaro</label><div class="plain-output" id="plainOutput"></div><div class="footer-note">Le ipotesi assegnate dai digrammi frequenti italiani vengono mostrate anche qui. Quando selezioni una sequenza, tutte le sue occorrenze vengono evidenziate.</div>
+</div></section>
+</div>
+
+<div class="triple">
+<section class="card"><div class="card-head"><h2>3. Digrammi frequenti italiani</h2><span class="pill">statici</span></div><div class="card-body">
+<div class="italian-list" id="italianList"></div>
+<div class="footer-note">Lista statica di bigrammi frequenti in italiano, utile come supporto euristico. Nel Playfair non implica una sostituzione diretta certa, ma aiuta a formulare ipotesi.</div>
+</div></section>
+<section class="card"><div class="card-head"><h2>4. Assegna ai digrammi cifrati frequenti</h2><span class="pill">ipotesi</span></div><div class="card-body">
+<div class="row"><div><label for="topAssignCount">Digrammi cifrati da mostrare</label><input id="topAssignCount" type="number" min="5" max="100" value="25"></div><div><label for="assignmentMode">Modalità</label><select id="assignmentMode"><option value="select">Scelta manuale</option><option value="auto">Precompila per rango</option></select></div></div>
+<div class="row"><div><label for="assignmentFilter">Filtra</label><input id="assignmentFilter" placeholder="digramma cifrato o ipotesi"></div><div><label for="assignmentSortMode">Ordina per</label><select id="assignmentSortMode"><option value="freqDesc">Frequenza messaggio ↓</option><option value="freqAsc">Frequenza messaggio ↑</option><option value="pctDesc">Percentuale messaggio ↓</option><option value="pctAsc">Percentuale messaggio ↑</option><option value="alphaAsc">Digramma A-Z</option><option value="alphaDesc">Digramma Z-A</option><option value="hypAsc">Ipotesi A-Z</option></select></div></div>
+<div class="row" style="margin-top:10px"><button id="applyRankBtn">Applica per rango</button><button id="clearAssignmentsBtn" class="danger">Cancella assegnazioni</button></div>
+<div id="assignmentConflictWarning" class="warnbox hidden"></div><div class="list-wrap" style="margin-top:12px"><table><thead><tr><th>#</th><th>Cifrato</th><th>Freq.</th><th>% msg.</th><th>Assegna italiano</th><th>Nota</th></tr></thead><tbody id="assignmentTable"></tbody></table></div>
+</div></section>
+<section class="card"><div class="card-head"><h2>5. Digrammi e ipotesi</h2><span class="pill">ipotesi</span></div><div class="card-body">
+<div class="row"><div><label for="digramFilter">Filtra digrammi</label><input id="digramFilter" placeholder="digramma, ipotesi o nota"></div><div><label for="digramStatusFilter">Stato</label><select id="digramStatusFilter"><option value="all">Tutti</option><option value="solved">Solo risolti</option><option value="locked">Solo bloccati</option><option value="unlocked">Risolti non bloccati</option><option value="unsolved">Solo non risolti</option><option value="notes">Con note</option><option value="double">Doppi Playfair</option></select></div><div><label for="digramSortMode">Ordina per</label><select id="digramSortMode"><option value="freqDesc">Frequenza ↓</option><option value="freqAsc">Frequenza ↑</option><option value="alphaAsc">Digramma A-Z</option><option value="alphaDesc">Digramma Z-A</option><option value="hypAsc">Ipotesi A-Z</option><option value="pctDesc">Percentuale ↓</option></select></div></div>
+<div class="footer-note">Puoi filtrare per digramma cifrato, ipotesi inserita, nota o stato. Clicca sull’icona di stato per bloccare/sbloccare un’associazione: un lucchetto non può essere cancellato o modificato finché non viene riportato allo stato semplice.</div>
+<details class="hyp-io-panel" id="hypIoPanel">
+<summary class="hyp-io-toggle">Import / export ipotesi digrammi <span class="pill">apri / chiudi</span></summary>
+<div class="hyp-io-content">
+<label for="hypImportExportBox">Associazioni in formato testo</label>
+<textarea id="hypImportExportBox" placeholder="BY=FA&#10;FV=AN&#10;HB=ZI&#10;HI=RA&#10;HN=ON&#10;HS=FX&#10;IK=CO&#10;IM=TI&#10;ML=NT&#10;TN=EX"></textarea>
+<div class="hyp-io-actions">
+<button id="pasteHypBtn">Importa da clipboard</button>
+<button id="importHypTextBtn">Importa dal box</button>
+<button id="exportHypBtn">Esporta nel box</button>
+<button id="copyHypBtn">Copia export</button>
+<button id="clearUnlockedHypBtn" class="danger">Cancella ipotesi non bloccate</button>
+</div>
+<div id="hypIoSummary" class="hyp-io-summary muted">Formato supportato: una associazione per riga, ad esempio <span class="kbd">BY=FA</span>. Sono accettati anche <span class="kbd">BY → FA</span> e spazi opzionali.</div>
+<div class="hyp-io-help">L’import rispetta i lucchetti: le associazioni bloccate non vengono sovrascritte. L’export include solo i digrammi con ipotesi valorizzata, ordinati per frequenza e poi alfabeticamente.</div>
+</div>
+</details>
+<div id="digramConflictWarning" class="warnbox hidden"></div><div class="list-wrap" style="margin-top:12px"><table><thead><tr><th>Stato</th><th>Colore</th><th>Digramma</th><th>Freq.</th><th>%</th><th>Ipotesi</th><th>Note</th></tr></thead><tbody id="digramTable"></tbody></table></div>
+</div></section>
+</div>
+
+<section class="card" style="margin-top:18px"><div class="card-head"><h2>6. Frequenze comparate</h2><span class="pill">messaggio vs italiano</span></div><div class="card-body"><div class="chart-wrap" id="freqChart"></div><div class="footer-note">A sinistra sono mostrati, indipendentemente dal messaggio, i digrammi più frequenti della lingua italiana secondo la tabella statica di riferimento. A destra sono mostrati i digrammi più frequenti nel messaggio cifrato.</div></div></section>
+
+<section class="card" style="margin-top:18px"><div class="card-head"><h2>7. Compatibilità strutturale Playfair</h2><span class="pill">digrammi doppi</span></div><div class="card-body">
+<div id="playfairStructuralCheck"></div>
+<div class="footer-note">Il controllo è crittoanalitico: in Playfair standard, se il testo cifrato è diviso nell’allineamento corretto, non dovrebbero comparire coppie cifrate con due lettere uguali, ad esempio <span class="kbd">QQ</span>, <span class="kbd">LL</span>, <span class="kbd">AA</span>. Il controllo confronta anche l’offset alternativo per individuare eventuale disallineamento.</div>
+</div></section>
+
+<section class="card" style="margin-top:18px"><div class="card-head"><h2>8. Statistiche crittoanalitiche dei digrammi</h2><span class="pill">diagnostica</span></div><div class="card-body">
+<div id="digramStats"></div>
+<div class="row" style="margin-top:12px"><div><label>Top digrammi del messaggio</label><div class="list-wrap"><table class="topdig-table"><thead><tr><th>#</th><th>Digramma</th><th>Freq.</th><th>%</th><th>Prime posizioni</th></tr></thead><tbody id="digramTopTable"></tbody></table></div></div><div><label>Segnali utili per la crittoanalisi</label><div id="digramSignals" class="signal-list"></div></div></div>
+<div class="footer-note">Queste statistiche non decifrano il testo, ma aiutano a capire se il messaggio contiene abbastanza ridondanza per lavorare su Playfair: ripetizioni, distribuzione dei digrammi, entropia e sequenze ricorrenti lunghe.</div>
+</div></section>
+
+<div class="seqgrid">
+<section class="card"><div class="card-head"><h2>8. Sequenze ricorrenti</h2><span class="pill">pattern</span></div><div class="card-body">
+<div class="row"><div><label for="seqLen">Lunghezza sequenza</label><select id="seqLen" title="Mostra solo le lunghezze per cui sono state trovate sequenze ricorrenti"></select></div><div><label for="minSeqFreq">Frequenza minima</label><input id="minSeqFreq" type="number" min="1" value="2"></div><div><label for="seqSearch">Filtra sequenza</label><input id="seqSearch" placeholder="es. AB QX"></div><div><label for="seqDigramFilter">Contiene digramma</label><input id="seqDigramFilter" maxlength="2" placeholder="es. AB"></div></div><div id="seqLenStats" class="seq-len-stats"></div>
+<div class="checks"><label class="check"><input type="checkbox" id="overlapSeq" checked> Considera finestre sovrapposte</label></div>
+<div class="row" style="margin-top:10px"><button id="seqAnalyzeBtn">Aggiorna sequenze</button><button id="copyVisibleSeqBtn">Copia elenco visualizzato</button><button id="clearSeqBtn">Deseleziona</button></div>
+<div class="list-wrap" style="margin-top:12px"><div id="seqList"></div></div>
+<div class="footer-note">Ogni sequenza mostra sia i digrammi cifrati sia, sotto, i digrammi già “risolti” tramite le ipotesi. Le sottosequenze completamente contenute in sequenze ricorrenti più lunghe vengono nascoste, così restano visibili solo le sequenze massimali. Clicca su un singolo blocco digramma → ipotesi per impostarlo; se è già impostato, puoi azzerarlo senza perdere la sequenza selezionata.</div>
+</div></section>
+<section class="card"><div class="card-head"><h2>9. Dettaglio sequenza selezionata</h2><span class="pill" id="selectedSeqPill">nessuna</span></div><div class="card-body">
+<label>Ipotesi globale sulla sequenza</label><input id="seqHypInput" placeholder="es. DICONO / CHEIL / ...">
+<label>Note sulla sequenza</label><input id="seqNoteInput" placeholder="es. possibile inizio frase, suffisso, parola ricorrente...">
+<div class="row" style="margin-top:10px"><button id="copySeqBtn">Copia sequenza</button></div>
+<label>Occorrenze e contesto</label><div class="list-wrap"><div id="seqDetail"></div></div>
+</div></section>
+</div>
+
+<div class="workspace">
+<section class="card"><div class="card-head"><h2>10. Supporto Playfair</h2><span class="pill">opzionale</span></div><div class="card-body">
+<label for="keywordInput">Parola chiave candidata</label><input id="keywordInput" placeholder="es. VERME" />
+<div class="row" style="margin-top:10px"><button id="buildMatrixBtn">Visualizza anteprima</button><button id="tryDecryptBtn" class="primary">Applica decifratura</button></div>
+<div class="matrix" id="matrix"></div><label>Decifratura Playfair candidata</label><div class="plain-output" id="decryptOutput"></div>
+<div class="alert warn" style="margin-top:12px"><strong>⚙️ Modalità:</strong> <span class="kbd">Visualizza anteprima</span> mostra solo matrice e output. <span class="kbd">Applica decifratura</span> imposta TUTTE le ipotesi nei pannelli 2 e 5 usando le trasformazioni Playfair.</div>
+<label>Matrici candidate da ipotesi</label><div class="row"><button id="generateMatricesBtn">Genera matrici candidate</button><input id="matrixTryCount" type="number" min="100" max="50000" value="3000" title="tentativi random"></div><div id="matrixCandidates" class="plain-output" style="max-height:420px"></div>
+<div class="footer-note">Regole implementate: stessa riga → sinistra in decifratura; stessa colonna → sopra; rettangolo → stessa riga, colonna dell’altra lettera. J viene trattata come I.</div>
+</div></section>
+<section class="card"><div class="card-head"><h2>11. Legenda operativa</h2><span class="pill">note</span></div><div class="card-body">
+<div class="alert">Nel Playfair i digrammi italiani frequenti non vanno interpretati come sostituzioni certe. Sono ipotesi di lavoro: se assegni <span class="kbd">AB → DI</span>, l’applicazione lo mostra ovunque per aiutarti a vedere se le sequenze diventano linguisticamente plausibili.</div>
+<div class="footer-note">Suggerimento: parti dai digrammi cifrati più frequenti, formula 2-3 ipotesi alternative, poi guarda le sequenze ricorrenti e il contesto. Le ipotesi poco plausibili emergeranno rapidamente.</div>
+</div></section>
+</div>
+</main>
+
+<!-- Context menu per chip -->
+<div id="chipContextMenu" class="chip-context-menu">
+<div class="context-menu-item" data-action="lock"><span class="icon">🔒</span> Blocca digramma</div>
+<div class="context-menu-item" data-action="unlock"><span class="icon">🔓</span> Sblocca digramma</div>
+<div class="context-menu-separator"></div>
+<div class="context-menu-item" data-action="edit"><span class="icon">✏️</span> Modifica ipotesi</div>
+<div class="context-menu-item" data-action="clear"><span class="icon">🗑️</span> Cancella ipotesi</div>
+</div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const palette=['#67e8f9','#86efac','#fde68a','#fca5a5','#c4b5fd','#fdba74','#93c5fd','#f0abfc','#bef264','#a7f3d0','#f9a8d4','#d9f99d','#bfdbfe','#ddd6fe','#fecaca','#ccfbf1','#fed7aa','#e9d5ff','#bae6fd','#bbf7d0'];
+const italianDigrams=['DI','ER','RE','IN','ON','TO','TA','TE','EN','CO','CH','QU','LA','AL','EL','LI','RI','ST','AN','RA','TI','NO','DE','ES','OR','AR','LO','RO','LE','SI','LL','CA','CI','NE','SE','IL','UN','PE','ME','ND','NT','NI','VE','IA','IO','DO','MA','CE','SS','TT','ZZ','GN','GL','SC','PR','TR','GR','CR','PO','PA'];
+const italianFreqPct={DI:2.90,ER:2.45,RE:2.35,IN:2.30,ON:2.15,TO:2.05,TA:1.95,TE:1.90,EN:1.85,CO:1.80,CH:1.70,QU:1.55,LA:1.50,AL:1.48,EL:1.42,LI:1.35,RI:1.32,ST:1.28,AN:1.25,RA:1.22,TI:1.18,NO:1.14,DE:1.12,ES:1.08,OR:1.05,AR:1.02,LO:1.00,RO:.98,LE:.96,SI:.94,LL:.90,CA:.88,CI:.86,NE:.84,SE:.82,IL:.80,UN:.78,PE:.76,ME:.74,ND:.72,NT:.70,NI:.68,VE:.66,IA:.64,IO:.62,DO:.60,MA:.58,CE:.56,SS:.54,TT:.52,ZZ:.22,GN:.20,GL:.19,SC:.18,PR:.17,TR:.16,GR:.15,CR:.14,PO:.13,PA:.12};
+const state={raw:'',normalized:'',digrams:[],counts:new Map(),hypotheses:{},lockedHypotheses:{},notes:{},selected:null,seqMap:new Map(),selectedSeq:null,seqNotes:{},seqHyps:{},displayedSeqRows:[],seqCache:null};
+function norm(text){let t=text.toUpperCase(); if($('removeNonLetters').checked)t=t.replace(/[^A-Z]/g,''); else t=t.replace(/\s+/g,''); if($('mapJ').checked)t=t.replace(/J/g,'I'); return t}
+function split(t){const r=[]; for(let i=0;i<t.length;i+=2)r.push(t.slice(i,i+2)); return r.filter(Boolean)}
+function analyze(){state.raw=$('cipherInput').value; state.normalized=norm(state.raw); state.digrams=split(state.normalized); state.counts=new Map(); for(const d of state.digrams)state.counts.set(d,(state.counts.get(d)||0)+1); for(const d of state.counts.keys()){if(!(d in state.hypotheses))state.hypotheses[d]=''; if(!(d in state.notes))state.notes[d]=''} updateSeqLengthOptions(); buildSeqMap(); renderAll(); persist()}
+function colorFor(d){const uniq=[...state.counts.keys()].sort((a,b)=>(state.counts.get(b)-state.counts.get(a))||a.localeCompare(b)); const idx=uniq.indexOf(d); return palette[(idx<0?0:idx)%palette.length]}
+function contrast(hex){const c=hex.substring(1),r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16); return (r*299+g*587+b*114)/1000>145?'#0b1220':'#f8fafc'}
+function parseDigramSequenceFilter(raw){const clean=String(raw||'').toUpperCase().replace(/[^A-Z\s]/g,' ').replace(/\s+/g,' ').trim(); if(!clean)return []; const spaced=clean.split(' ').filter(Boolean); if(spaced.length>1)return spaced.filter(x=>x.length===2); const compact=spaced[0]||''; if(compact.length>2&&compact.length%2===0){const out=[]; for(let i=0;i<compact.length;i+=2)out.push(compact.slice(i,i+2)); return out} return []}
+function sequenceFilterMatchSet(tokens){const set=new Set(); if(!tokens.length)return set; for(let start=0;start<=state.digrams.length-tokens.length;start++){let ok=true; for(let j=0;j<tokens.length;j++){if(state.digrams[start+j]!==tokens[j]){ok=false; break}} if(ok)for(let j=0;j<tokens.length;j++)set.add(start+j)} return set}
+
+function boardChipClick(d){
+  clearTimeout(state.boardClickTimer);
+  state.boardClickTimer=setTimeout(()=>{state.selected=d; renderAll(); focusHyp(d)},220);
+}
+function beginInlineHypEdit(d,i){
+  clearTimeout(state.boardClickTimer);
+  state.selected=d;
+  if(isLocked(d)){
+    alert(`Il digramma ${d} è bloccato. Sbloccalo dal pannello 5 prima di modificarlo.`);
+    renderBoard();
+    return;
+  }
+  const chip=document.querySelector(`.chip[data-index="${i}"]`) || document.querySelector(`.chip[data-digram="${CSS.escape(d)}"]`);
+  if(!chip)return;
+  chip.classList.add('selected');
+  const target=chip.querySelector('.hyp');
+  if(!target)return;
+  const old=state.hypotheses[d]||'';
+  const input=document.createElement('input');
+  input.className='board-hyp-input';
+  input.maxLength=8;
+  input.value=old;
+  input.placeholder='..';
+  input.title='Invio per salvare, Esc per annullare. Lascia vuoto per azzerare.';
+  target.replaceWith(input);
+  input.focus();
+  input.select();
+  let done=false;
+  const finish=(save)=>{
+    if(done)return;
+    done=true;
+    if(save){
+      setHyp(d,input.value);
+      persist();
+    }
+    renderAll();
+  };
+  input.onkeydown=e=>{
+    e.stopPropagation();
+    if(e.key==='Enter')finish(true);
+    if(e.key==='Escape')finish(false);
+  };
+  input.onblur=()=>finish(true);
+  input.onclick=e=>e.stopPropagation();
+  input.ondblclick=e=>e.stopPropagation();
+}
+
+function renderBoard(){const b=$('digramBoard'); b.innerHTML=''; let list=state.digrams.map((d,i)=>({d,i})); const mode=$('sortMode').value; const qRaw=($('boardFilter')?.value||'').trim().toUpperCase(); const q=qRaw.replace(/\s+/g,' '); const seqTokens=parseDigramSequenceFilter(qRaw); const seqFilterSet=sequenceFilterMatchSet(seqTokens); const st=$('boardStatusFilter')?.value||'all'; list=list.filter(({d,i})=>{const hyp=(state.hypotheses[d]||'').toUpperCase(); const solved=!!state.hypotheses[d]; const locked=isLocked(d); const textMatch=!q||d.includes(q)||hyp.includes(q); const seqMatch=seqTokens.length>1&&seqFilterSet.has(i); return (seqTokens.length>1?seqMatch:textMatch)&&(st==='all'||(st==='solved'&&solved)||(st==='unsolved'&&!solved)||(st==='locked'&&locked)||(st==='double'&&d.length===2&&d[0]===d[1]))}); if(mode==='freq')list.sort((a,b)=>(state.counts.get(b.d)-state.counts.get(a.d))||a.d.localeCompare(b.d)||a.i-b.i); if(mode==='alpha')list.sort((a,b)=>a.d.localeCompare(b.d)||a.i-b.i); const match=new Set(); if(state.selectedSeq&&state.seqMap.has(state.selectedSeq)){const n=+$('seqLen').value; for(const s of state.seqMap.get(state.selectedSeq))for(let j=0;j<n;j++)match.add(s+j)} for(const i of seqFilterSet)match.add(i); list.forEach(({d,i},ix)=>{const chip=document.createElement('span'); const bg=colorFor(d); chip.className='chip'+(state.selected===d?' selected':'')+(match.has(i)?' seqmatch':'')+(isDupHyp(d)?' conflict':'')+(isAlignedDoubleDigramAtIndex(i)?' double-digram':'')+(isLocked(d)?' locked':''); chip.style.background=bg; chip.style.color=contrast(bg); chip.dataset.digram=d; chip.dataset.index=i; chip.draggable=true; chip.ondragstart=e=>{e.dataTransfer.setData('text/plain',d)}; const hyp=state.hypotheses[d]||''; chip.innerHTML=`<span class="chip-meta"><span class="cipher-sub">${d}</span>${$('showIndex').checked?`<span class="idx-sup">${i+1}</span>`:''}</span><span class="hyp ${hyp?'':'empty'}">${hyp||'..'}</span>`; chip.title=`Doppio click per impostare qui l’ipotesi · trascina per scambiare ipotesi · ${d} · posizione ${i+1} · freq. ${state.counts.get(d)}`; chip.onclick=()=>boardChipClick(d); chip.ondblclick=e=>{e.preventDefault(); e.stopPropagation(); beginInlineHypEdit(d,i)}; chip.oncontextmenu=e=>{e.preventDefault(); e.stopPropagation(); showChipContextMenu(d,e.clientX,e.clientY)}; b.appendChild(chip);}); if(!state.digrams.length)b.innerHTML='<span class="muted">I digrammi appariranno qui dopo l’analisi.</span>'; else if(!list.length)b.innerHTML='<span class="muted">Nessun digramma corrisponde ai filtri impostati. Puoi incollare anche sequenze tipo <span class="kbd">TD IQ VP</span>.</span>'}
+function renderStats(){const letters=new Set(state.normalized.split('')); $('lenStat').textContent=state.normalized.length; $('digramStat').textContent=state.digrams.length; $('uniqueStat').textContent=state.counts.size; $('alphaStat').textContent=letters.size; const hasJ=state.raw.toUpperCase().includes('J'), odd=state.normalized.length%2!==0, alpha=letters.size; let cls='alert',msg='Inserisci un testo per ottenere il controllo su J, alfabeto e parità della lunghezza.'; if(state.normalized.length){const parts=[]; if(!hasJ&&alpha===25)parts.push('J assente e alfabeto osservato di 25 lettere: indizio coerente con Playfair classico.'); else if(!hasJ)parts.push('J assente: indizio compatibile, ma non conclusivo.'); else parts.push('J presente nel testo originale: l’ipotesi Playfair classica I/J è meno forte, salvo varianti.'); parts.push(odd?'Lunghezza dispari: verifica eventuali omissioni o filler.':'Lunghezza pari: coerente con una cifratura a digrammi.'); parts.push(`Alfabeto: ${[...letters].sort().join('')}`); cls+=(!hasJ&&alpha===25&&!odd)?' good':' warn'; msg=parts.join(' ')} $('playfairHint').className=cls; $('playfairHint').textContent=msg}
+
+function normHyp(v){return String(v||'').toUpperCase().replace(/[^A-Z?]/g,'').slice(0,8)}
+function hypOwners(){const m=new Map(); for(const [d,h] of Object.entries(state.hypotheses)){const v=normHyp(h); if(!v||v.includes('?'))continue; if(!m.has(v))m.set(v,[]); m.get(v).push(d)} return m}
+function duplicateHyps(){const dup=new Map(); for(const [h,ds] of hypOwners().entries())if(ds.length>1)dup.set(h,ds); return dup}
+function isDupHyp(d){const h=normHyp(state.hypotheses[d]); return h&&duplicateHyps().has(h)}
+function setWarning(id){const el=$(id); if(!el)return; const dup=duplicateHyps(); if(!dup.size){el.classList.add('hidden'); el.textContent=''; return} const txt=[...dup.entries()].map(([h,ds])=>`${h}: ${ds.join(', ')}`).join(' · '); el.classList.remove('hidden'); el.innerHTML=`Duplicati da correggere: <span class="conflict-text">${esc(txt)}</span>`}
+function isLocked(d){return !!(state.lockedHypotheses&&state.lockedHypotheses[d]&&state.hypotheses[d])}
+function setHyp(d,val,opts={}){const next=normHyp(val); const current=normHyp(state.hypotheses[d]||''); if(isLocked(d)&&next!==current&&!opts.force){return false} state.hypotheses[d]=next; if(!next&&state.lockedHypotheses)delete state.lockedHypotheses[d]; return true}
+function clearHyp(d){if(isLocked(d)){alert(`Il digramma ${d} è bloccato. Sbloccalo dal pannello 5 prima di cancellare o modificare l’associazione.`); return false} return setHyp(d,'')}
+function toggleLock(d){if(!d)return; if(!state.hypotheses[d]){alert('Puoi bloccare solo un digramma con ipotesi impostata.'); return} state.lockedHypotheses=state.lockedHypotheses||{}; if(isLocked(d))delete state.lockedHypotheses[d]; else state.lockedHypotheses[d]=true; renderAll(); persist()}
+
+// Context menu per chip
+let contextMenuDigram=null;
+let contextMenuCache={lockItem:null,unlockItem:null,clearItem:null,editItem:null};
+
+function showChipContextMenu(d,x,y){
+  contextMenuDigram=d;
+  const menu=$('chipContextMenu');
+  if(!menu)return;
+
+  // Cache elementi del menu se non già fatto
+  if(!contextMenuCache.lockItem){
+    contextMenuCache.lockItem=menu.querySelector('[data-action="lock"]');
+    contextMenuCache.unlockItem=menu.querySelector('[data-action="unlock"]');
+    contextMenuCache.clearItem=menu.querySelector('[data-action="clear"]');
+    contextMenuCache.editItem=menu.querySelector('[data-action="edit"]');
+  }
+
+  const locked=isLocked(d);
+  const hasHyp=!!(state.hypotheses[d]);
+
+  // Mostra/nascondi opzioni in base allo stato
+  const {lockItem,unlockItem,clearItem}=contextMenuCache;
+
+  if(lockItem)lockItem.style.display=locked?'none':'flex';
+  if(unlockItem)unlockItem.style.display=locked?'flex':'none';
+  if(clearItem){
+    clearItem.classList.toggle('disabled',!hasHyp||locked);
+    clearItem.title=locked?'Sblocca prima per cancellare':'';
+  }
+
+  // Mostra il menu per calcolare dimensioni (usa solo classe CSS)
+  menu.classList.add('show');
+
+  // Calcola dimensioni menu
+  const menuWidth=menu.offsetWidth;
+  const menuHeight=menu.offsetHeight;
+
+  // Calcola posizione ottimale
+  let posX=x;
+  let posY=y;
+
+  // Aggiusta X se esce a destra
+  if(posX+menuWidth>window.innerWidth){
+    posX=Math.max(5,window.innerWidth-menuWidth-5);
+  }
+
+  // Aggiusta Y se esce in basso
+  if(posY+menuHeight>window.innerHeight){
+    posY=Math.max(5,window.innerHeight-menuHeight-5);
+  }
+
+  // Assicura che non vada oltre i bordi sinistro/superiore
+  posX=Math.max(5,posX);
+  posY=Math.max(5,posY);
+
+  // Posiziona il menu
+  menu.style.left=posX+'px';
+  menu.style.top=posY+'px';
+}
+
+function hideChipContextMenu(){
+  const menu=$('chipContextMenu');
+  if(menu){
+    menu.classList.remove('show');
+  }
+  contextMenuDigram=null;
+}
+
+function handleChipContextMenuAction(action){
+  const d=contextMenuDigram;
+  if(!d)return;
+
+  hideChipContextMenu();
+
+  switch(action){
+    case 'lock':
+      if(!state.hypotheses[d]){
+        alert('Puoi bloccare solo un digramma con ipotesi impostata.');
+        return;
+      }
+      state.lockedHypotheses=state.lockedHypotheses||{};
+      state.lockedHypotheses[d]=true;
+      renderAll();
+      persist();
+      break;
+
+    case 'unlock':
+      if(state.lockedHypotheses&&state.lockedHypotheses[d]){
+        delete state.lockedHypotheses[d];
+        renderAll();
+        persist();
+      }
+      break;
+
+    case 'edit':
+      state.selected=d;
+      renderAll();
+      // Scroll al pannello 5 e focus sull'input
+      setTimeout(()=>{
+        const input=document.querySelector(`.hyp-input[data-digram="${CSS.escape(d)}"]`);
+        if(input){
+          input.scrollIntoView({behavior:'smooth',block:'center'});
+          input.focus();
+          input.select();
+        }
+      },100);
+      break;
+
+    case 'clear':
+      if(isLocked(d)){
+        alert(`Il digramma ${d} è bloccato. Sbloccalo prima di cancellare l'ipotesi.`);
+        return;
+      }
+      if(state.hypotheses[d]){
+        if(confirm(`Cancellare l'ipotesi per ${d} (${state.hypotheses[d]})?`)){
+          clearHyp(d);
+          renderAll();
+          persist();
+        }
+      }
+      break;
+  }
+}
+
+function renderItalianList(){const box=$('italianList'); box.innerHTML=''; const used=new Set(Object.values(state.hypotheses).filter(Boolean)); italianDigrams.forEach((d,i)=>{const pct=fmtPct(italianFreqPct[d]||0); const s=document.createElement('span'); s.className='italian-chip'+(used.has(d)?' used':''); s.innerHTML=`<span class="rank">${i+1}</span>${d}<span class="freq-pill">${pct}</span>`; s.title=`${d} · frequenza italiana stimata ${pct} · clicca per copiare`; s.onclick=async()=>{try{await navigator.clipboard.writeText(d)}catch{}}; box.appendChild(s)})}
+function topCipherDigrams(){return [...state.counts.keys()].sort((a,b)=>(state.counts.get(b)-state.counts.get(a))||a.localeCompare(b))}
+function getAssignmentRows(){const total=Math.max(1,state.digrams.length); const q=($('assignmentFilter')?.value||'').trim().toUpperCase(); const sort=$('assignmentSortMode')?.value||'freqDesc'; let rows=[...state.counts.keys()].filter(d=>{const h=(state.hypotheses[d]||'').toUpperCase(); return !q||d.includes(q)||h.includes(q)}); rows.sort((a,b)=>{const fa=state.counts.get(a), fb=state.counts.get(b); const pa=fa/total*100, pb=fb/total*100; const ha=state.hypotheses[a]||'', hb=state.hypotheses[b]||''; if(sort==='freqAsc')return (fa-fb)||a.localeCompare(b); if(sort==='pctAsc')return (pa-pb)||a.localeCompare(b); if(sort==='pctDesc')return (pb-pa)||a.localeCompare(b); if(sort==='alphaAsc')return a.localeCompare(b); if(sort==='alphaDesc')return b.localeCompare(a); if(sort==='hypAsc')return ha.localeCompare(hb)||a.localeCompare(b); return (fb-fa)||a.localeCompare(b)}); return rows.slice(0,Math.max(5,+$('topAssignCount').value||25))}
+function renderAssignmentTable(){setWarning('assignmentConflictWarning'); const tb=$('assignmentTable'); tb.innerHTML=''; const total=Math.max(1,state.digrams.length); const top=getAssignmentRows(); if(!top.length){tb.innerHTML='<tr><td colspan="6" class="muted">Nessun digramma corrisponde ai filtri impostati.</td></tr>'; return} top.forEach((d,i)=>{const tr=document.createElement('tr'); tr.className='assign-row'+(isDupHyp(d)?' conflict':'')+(isLocked(d)?' locked-row':''); const msgPct=(state.counts.get(d)/total*100); const opts=['<option value="">--</option>'].concat(italianDigrams.map(it=>`<option value="${it}" ${state.hypotheses[d]===it?'selected':''}>${it} · ${fmtPct(italianFreqPct[it]||0)}</option>`)).join(''); const h=state.hypotheses[d]||''; const itPct=h?fmtPct(italianFreqPct[h]||0):''; const locked=isLocked(d); tr.innerHTML=`<td>${i+1}</td><td class="mono">${d}${locked?' 🔒':''}</td><td>${state.counts.get(d)}</td><td>${fmtPct(msgPct)}</td><td><select class="assign-select ${isDupHyp(d)?'conflict':''} ${locked?'locked-input':''}" data-digram="${d}" ${locked?'disabled title="Associazione bloccata: sblocca dal pannello 5"':''}>${opts}</select></td><td class="tiny ${isDupHyp(d)?'conflict-text':'muted'}">${h?`${d} <span class="arrow">→</span> ${h} <span class="freq-pill">it ${itPct}</span>${locked?' · bloccato':''}${isDupHyp(d)?' · duplicato':''}`:'nessuna ipotesi'}</td>`; tb.appendChild(tr)}); tb.querySelectorAll('.assign-select').forEach(sel=>sel.onchange=e=>{const d=e.target.dataset.digram; if(!setHyp(d,e.target.value))alert(`Il digramma ${d} è bloccato. Sbloccalo dal pannello 5 prima di modificarlo.`); renderAll(); persist()})}
+function getDigramRows(){const total=Math.max(1,state.digrams.length); const q=($('digramFilter')?.value||'').trim().toUpperCase(); const status=$('digramStatusFilter')?.value||'all'; const sort=$('digramSortMode')?.value||'freqDesc'; let rows=[...state.counts.keys()].filter(d=>{const hyp=(state.hypotheses[d]||'').toUpperCase(); const note=(state.notes[d]||'').toUpperCase(); const matches=!q||d.includes(q)||hyp.includes(q)||note.includes(q); const solved=!!state.hypotheses[d]; const locked=isLocked(d); const hasNote=!!state.notes[d]; const statusOk=status==='all'||(status==='solved'&&solved)||(status==='locked'&&locked)||(status==='unlocked'&&solved&&!locked)||(status==='unsolved'&&!solved)||(status==='notes'&&hasNote)||(status==='double'&&d.length===2&&d[0]===d[1]); return matches&&statusOk}); rows.sort((a,b)=>{const fa=state.counts.get(a), fb=state.counts.get(b); const ha=state.hypotheses[a]||'', hb=state.hypotheses[b]||''; if(sort==='freqAsc')return (fa-fb)||a.localeCompare(b); if(sort==='alphaAsc')return a.localeCompare(b); if(sort==='alphaDesc')return b.localeCompare(a); if(sort==='hypAsc')return ha.localeCompare(hb)||a.localeCompare(b); if(sort==='pctDesc')return (fb/total-fa/total)||a.localeCompare(b); return (fb-fa)||a.localeCompare(b)}); return rows}
+function hypothesisStatusHtml(d){const h=state.hypotheses[d]||''; const note=state.notes[d]||''; if(isLocked(d))return `<button class="status-icon-btn lock-toggle" data-digram="${esc(d)}" title="Associazione bloccata. Clicca per riportarla allo stato associato semplice."><span class="status-icon locked">🔒</span></button>`; if(isDupHyp(d))return `<button class="status-icon-btn lock-toggle" data-digram="${esc(d)}" title="Ipotesi duplicata. Correggere prima di bloccare."><span class="status-icon dup">⚠️</span></button>`; if(h&&note)return `<button class="status-icon-btn lock-toggle" data-digram="${esc(d)}" title="Ipotesi presente con nota. Clicca per bloccare."><span class="status-icon note">📝</span></button>`; if(h)return `<button class="status-icon-btn lock-toggle" data-digram="${esc(d)}" title="Ipotesi impostata. Clicca per bloccare."><span class="status-icon ok">✓</span></button>`; if(note)return '<span class="status-icon note" title="Nota presente, ipotesi mancante">🗒️</span>'; return '<span class="status-icon empty" title="Nessuna ipotesi">○</span>'}
+function renderDigramTable(){setWarning('digramConflictWarning'); const tb=$('digramTable'); tb.innerHTML=''; const total=Math.max(1,state.digrams.length); const rows=getDigramRows(); if(!rows.length){tb.innerHTML='<tr><td colspan="7" class="muted">Nessun digramma corrisponde ai filtri impostati.</td></tr>'; return} for(const d of rows){const tr=document.createElement('tr'); const dup=isDupHyp(d); const locked=isLocked(d); if(state.selected===d)tr.style.background='rgba(249,115,22,.13)'; if(dup)tr.classList.add('conflict'); if(locked)tr.classList.add('locked-row'); const pct=(state.counts.get(d)/total*100).toFixed(2); tr.innerHTML=`<td class="status-cell">${hypothesisStatusHtml(d)}</td><td><span class="swatch" style="background:${colorFor(d)}"></span></td><td class="mono">${d}</td><td>${state.counts.get(d)}</td><td>${pct}%</td><td><input class="mini-input hyp-input ${dup?'conflict':''} ${locked?'locked-input':''}" data-digram="${d}" maxlength="8" value="${esc(state.hypotheses[d]||'')}" placeholder=".." ${locked?'disabled':''} title="${locked?'Associazione bloccata: clicca sul lucchetto per sbloccarla':(dup?'Ipotesi duplicata: correggere':'Ipotesi in chiaro')}"></td><td><input class="note-input" data-digram="${d}" value="${esc(state.notes[d]||'')}" placeholder="nota"></td>`; tr.onclick=e=>{if(!e.target.matches('input,button,.status-icon,.status-icon-btn')){state.selected=d; renderAll()}}; tb.appendChild(tr)} tb.querySelectorAll('.lock-toggle').forEach(btn=>btn.onclick=e=>{e.stopPropagation(); toggleLock(btn.dataset.digram)}); tb.querySelectorAll('.hyp-input').forEach(inp=>{inp.oninput=e=>{const d=e.target.dataset.digram; if(!setHyp(d,e.target.value)){alert(`Il digramma ${d} è bloccato. Sbloccalo prima di modificarlo.`); renderAll(); return} const active=document.activeElement; renderAll(); persist(); if(active&&active.dataset&&active.dataset.digram===d){const ni=document.querySelector(`.hyp-input[data-digram="${CSS.escape(d)}"]`); if(ni){ni.focus(); ni.setSelectionRange(ni.value.length,ni.value.length)}}}; inp.onfocus=e=>{state.selected=e.target.dataset.digram; renderBoard()}}); tb.querySelectorAll('.note-input').forEach(inp=>{inp.oninput=e=>{state.notes[e.target.dataset.digram]=e.target.value; renderDigramTable(); persist()}; inp.onfocus=e=>{state.selected=e.target.dataset.digram; renderBoard()}})}
+function renderPlain(){$('plainOutput').textContent=state.digrams.map(d=>state.hypotheses[d]||'..').join(' ')}
+function resolvedHtml(key){return `<div class="resolved">${key.split(' ').map(d=>`<span class="pair clickable seq-pair" data-digram="${esc(d)}" title="Clicca per impostare o azzerare l’ipotesi di ${esc(d)}"><span class="c">${esc(d)}</span> <span class="arrow">→</span> <span class="${state.hypotheses[d]?'p':'u'}">${esc(state.hypotheses[d]||'..')}</span></span>`).join('')}</div>`}
+function bindSeqPairClicks(root=document){root.querySelectorAll('.seq-pair').forEach(el=>{el.onclick=e=>{e.stopPropagation(); toggleDigramHyp(el.dataset.digram)}})}
+function toggleDigramHyp(d){if(!d)return; const keepSeq=state.selectedSeq; if(state.hypotheses[d]){if(isLocked(d)){alert(`Il digramma ${d} è bloccato. Sbloccalo dal pannello 5 prima di cancellare l’associazione.`); return} if(confirm(`Azzerare l’ipotesi per il digramma ${d} (${state.hypotheses[d]})?`)){clearHyp(d)}}else{const value=prompt(`Imposta ipotesi in chiaro per il digramma ${d}.
+Puoi usare un digramma italiano, ad esempio DI, ER, RE, IN...`, ''); if(value===null)return; setHyp(d,value)} state.selectedSeq=keepSeq; state.selected=d; renderAll(); persist()}
+function resolvedText(key){return key.split(' ').map(d=>state.hypotheses[d]||'..').join(' ')}
+function clearSeqCache(){state.seqCache=null}
+function buildSeqMapForLength(n){const map=new Map(), overlap=$('overlapSeq').checked, step=overlap?1:n; if(n<2||!state.digrams.length||state.digrams.length<n)return map; for(let i=0;i<=state.digrams.length-n;i+=step){const key=state.digrams.slice(i,i+n).join(' '); if(!map.has(key))map.set(key,[]); map.get(key).push(i)} return map}
+function getSeqAnalysis(){const min=Math.max(1,+$('minSeqFreq').value||1), overlap=$('overlapSeq').checked, signature=`${state.normalized}|${min}|${overlap}`; if(state.seqCache&&state.seqCache.signature===signature)return state.seqCache; const maxLen=Math.min(50,state.digrams.length), all=[]; for(let n=2;n<=maxLen;n++){const map=buildSeqMapForLength(n); for(const [key,pos] of map.entries())if(pos.length>=min)all.push({n,key,pos})}
+  const coveredByLen=new Map(); for(const e of all){for(const start of e.pos){for(let n=2;n<e.n;n++){let set=coveredByLen.get(n); if(!set){set=new Set(); coveredByLen.set(n,set)} for(let p=start;p<=start+e.n-n;p++)set.add(p)}}}
+  const maximal=all.filter(e=>!e.pos.every(p=>coveredByLen.get(e.n)?.has(p))); const statMap=new Map(); for(const e of maximal){const cur=statMap.get(e.n)||{n:e.n,count:0,occ:0}; cur.count++; cur.occ+=e.pos.length; statMap.set(e.n,cur)} const stats=[...statMap.values()].sort((a,b)=>a.n-b.n); state.seqCache={signature,all,maximal,stats}; return state.seqCache}
+function getMaximalRecurringSeqEntries(){return getSeqAnalysis().maximal}
+function getSeqLengthStats(){return getSeqAnalysis().stats}
+function updateSeqLengthOptions(){const sel=$('seqLen'); if(!sel)return; const previous=sel.value||'6'; const stats=getSeqLengthStats(); sel.innerHTML=''; if(!stats.length){const opt=document.createElement('option'); opt.value='2'; opt.textContent='Nessuna sequenza ricorrente'; sel.appendChild(opt); return} const values=stats.map(x=>String(x.n)); for(const st of stats){const opt=document.createElement('option'); opt.value=String(st.n); opt.textContent=`${st.n} digrammi (${st.count})`; sel.appendChild(opt)} if(values.includes(previous))sel.value=previous; else sel.value=String(stats[stats.length-1].n)}
+function renderSeqLengthStats(){const box=$('seqLenStats'); if(!box)return; const stats=getSeqLengthStats(); const current=$('seqLen')?.value||''; if(!state.digrams.length){box.innerHTML='<span class="muted tiny">Le lunghezze disponibili appariranno dopo l’analisi.</span>'; return} if(!stats.length){box.innerHTML='<span class="muted tiny">Nessuna sequenza ricorrente con la frequenza minima corrente.</span>'; return} box.innerHTML='<span class="muted tiny">Sequenze massimali trovate per lunghezza:</span>'+stats.map(st=>`<span class="len-badge ${String(st.n)===current?'active':''}" data-len="${st.n}" title="${st.occ} occorrenze totali">${st.n} dig. <span class="count">${st.count}</span></span>`).join(''); box.querySelectorAll('.len-badge').forEach(el=>el.onclick=()=>{const sel=$('seqLen'); sel.value=el.dataset.len; state.selectedSeq=null; buildSeqMap(); renderAll(); persist()})}
+function buildSeqMap(){state.seqMap=new Map(); const n=+$('seqLen').value||2; for(const e of getMaximalRecurringSeqEntries())if(e.n===n)state.seqMap.set(e.key,e.pos)}
+function renderSeqList(){const list=$('seqList'); list.innerHTML=''; const min=Math.max(1,+$('minSeqFreq').value||1), q=$('seqSearch').value.trim().toUpperCase().replace(/\s+/g,' '), dg=($('seqDigramFilter')?.value||'').trim().toUpperCase().replace(/[^A-Z]/g,''); let rows=[...state.seqMap.entries()].filter(([k,v])=>{const parts=k.split(' '); return v.length>=min&&(!q||k.includes(q)||resolvedText(k).includes(q))&&(!dg||parts.includes(dg));}).sort((a,b)=>(b[1].length-a[1].length)||a[0].localeCompare(b[0])); state.displayedSeqRows=rows.map(([k])=>k); if(!rows.length){list.innerHTML='<div class="seq-item muted">Nessuna sequenza con i filtri attuali.</div>'; return} for(const [k,pos] of rows){const div=document.createElement('div'); div.className='seq-item'+(state.selectedSeq===k?' active':''); const occ=pos.map(p=>p+1).join(', '), decoded=resolvedText(k); div.innerHTML=`<div class="seq-head"><div class="seq-title">${esc(k)}</div><button type="button" class="seq-copy-btn" data-seq="${esc(k)}" title="Copia solo la sequenza cifrata">Copia cifrato</button></div><div class="seq-decoded-line"><span class="muted">decodificata:</span>${esc(decoded)}</div>${resolvedHtml(k)}<div class="seq-meta"><span class="badge">freq. ${pos.length}</span><span class="badge">pos. ${occ}</span>${dg?`<span class="badge">contiene: ${esc(dg)}</span>`:''}${state.seqHyps[k]?`<span class="badge">ipotesi seq: ${esc(state.seqHyps[k])}</span>`:''}</div>`; div.onclick=()=>{state.selectedSeq=k; renderAll()}; const copyBtn=div.querySelector('.seq-copy-btn'); if(copyBtn)copyBtn.onclick=async e=>{e.stopPropagation(); await copyWithFeedback(k,e.currentTarget,'Cifrato copiato')}; list.appendChild(div); bindSeqPairClicks(div)}}
+
+function copyVisibleSequences(btn){const rows=state.displayedSeqRows||[]; if(!rows.length){copyWithFeedback('',btn,'Nessuna sequenza da copiare'); return} copyWithFeedback(rows.join('\n'),btn,`${rows.length} sequenze copiate`)}
+function matrixKeyString(m){return (m||[]).join('')}
+function adoptMatrixKey(key){if(!key)return; $('keywordInput').value=key; renderMatrix(); playfairDecrypt(); persist(); const box=$('matrix'); if(box)box.scrollIntoView({behavior:'smooth',block:'center'})}
+function renderSeqDetail(){const box=$('seqDetail'); box.innerHTML=''; const k=state.selectedSeq; $('selectedSeqPill').textContent=k||'nessuna'; $('seqHypInput').value=k?(state.seqHyps[k]||''):''; $('seqNoteInput').value=k?(state.seqNotes[k]||''):''; if(!k||!state.seqMap.has(k)){box.innerHTML='<div class="seq-item muted">Seleziona una sequenza ricorrente per vedere occorrenze, contesto e digrammi risolti.</div>'; return} const n=+$('seqLen').value; const head=document.createElement('div'); head.className='seq-item'; head.innerHTML=`<div class="seq-head"><div class="seq-title">${esc(k)}</div><button type="button" class="seq-copy-btn" title="Copia solo la sequenza cifrata">Copia cifrato</button></div><div class="seq-decoded-line"><span class="muted">decodificata:</span>${esc(resolvedText(k))}</div>${resolvedHtml(k)}<div class="seq-meta"><span class="badge">occorrenze: ${state.seqMap.get(k).length}</span></div>`; box.appendChild(head); const detailCopy=head.querySelector('.seq-copy-btn'); if(detailCopy)detailCopy.onclick=async e=>{e.stopPropagation(); await copyWithFeedback(k,e.currentTarget,'Cifrato copiato')}; bindSeqPairClicks(head); for(const start of state.seqMap.get(k)){ const before=state.digrams.slice(Math.max(0,start-3),start).join(' '); const hit=state.digrams.slice(start,start+n).join(' '); const after=state.digrams.slice(start+n,start+n+3).join(' '); const beforeR=state.digrams.slice(Math.max(0,start-3),start).map(d=>state.hypotheses[d]||'..').join(' '); const hitR=state.digrams.slice(start,start+n).map(d=>state.hypotheses[d]||'..').join(' '); const afterR=state.digrams.slice(start+n,start+n+3).map(d=>state.hypotheses[d]||'..').join(' '); const letters=state.digrams.slice(start,start+n).join(''); const div=document.createElement('div'); div.className='seq-item'; div.innerHTML=`<div><span class="badge">digramma #${start+1}</span><span class="badge">lettere ${start*2+1}-${start*2+letters.length}</span></div><div class="context"><span class="muted">cifrato:</span> ${esc(before)} <mark>${esc(hit)}</mark> ${esc(after)}</div><div class="context"><span class="muted">risolto:</span> ${esc(beforeR)} <mark>${esc(hitR)}</mark> ${esc(afterR)}</div><div class="seq-meta">blocco lettere: <span class="kbd">${letters}</span></div>`; div.onclick=()=>scrollChip(start); box.appendChild(div)}}
+
+function fmtPct(v){return `${Number(v||0).toFixed(2)}%`}
+function renderFreqChart(){const box=$('freqChart'); if(!box)return; const total=Math.max(1,state.digrams.length); const msgKeys=topCipherDigrams().slice(0,30); const itKeys=[...italianDigrams].sort((a,b)=>(italianFreqPct[b]||0)-(italianFreqPct[a]||0)||a.localeCompare(b)).slice(0,30); const maxMsg=Math.max(.01,...msgKeys.map(k=>(state.counts.get(k)||0)/total*100)); const maxIt=Math.max(.01,...itKeys.map(k=>italianFreqPct[k]||0)); const msgHtml=state.digrams.length?`<div class="freq-panel"><div class="freq-title">Messaggio cifrato</div><div class="freq-sub">Top ${msgKeys.length} digrammi osservati nel testo</div><div class="bar-row chart-head"><span>Dig.</span><span>%</span><span>Frequenza</span><span></span><span></span></div>${msgKeys.map(k=>{const mp=(state.counts.get(k)||0)/total*100; return `<div class="bar-row"><span class="bar-label">${k}</span><span>${fmtPct(mp)}</span><div class="barbox"><div class="bar-msg" style="width:${Math.max(1,mp/maxMsg*100)}%"></div></div><span class="tiny muted">${state.counts.get(k)||0}</span><span></span></div>`}).join('')}</div>`:`<div class="freq-panel"><div class="freq-title">Messaggio cifrato</div><div class="muted">Il grafico apparirà dopo l’analisi del testo.</div></div>`; const itHtml=`<div class="freq-panel"><div class="freq-title">Italiano - riferimento statico</div><div class="freq-sub">Top ${itKeys.length} digrammi più frequenti in italiano</div><div class="bar-row chart-head"><span>Dig.</span><span>%</span><span>Frequenza</span><span></span><span></span></div>${itKeys.map(k=>{const ip=italianFreqPct[k]||0; return `<div class="bar-row"><span class="bar-label">${k}</span><span>${fmtPct(ip)}</span><div class="barbox itbar"><div class="bar-it" style="width:${Math.max(1,ip/maxIt*100)}%"></div></div><span class="tiny muted">rank ${italianDigrams.indexOf(k)+1}</span><span></span></div>`}).join('')}</div>`; box.innerHTML=`<div class="freq-split">${itHtml}${msgHtml}</div>`}
+function setupDropZone(id){const z=$(id); if(!z)return; z.ondragover=e=>{e.preventDefault(); z.classList.add('ready')}; z.ondragleave=()=>z.classList.remove('ready'); z.ondrop=e=>{e.preventDefault(); z.classList.remove('ready'); const d=e.dataTransfer.getData('text/plain'); if(!d)return; z.dataset.digram=d; z.classList.add('filled'); z.innerHTML=`<strong>${esc(d)}</strong> → ${esc(state.hypotheses[d]||'..')}`}}
+function swapHypotheses(){const a=$('swapA')?.dataset.digram,b=$('swapB')?.dataset.digram; if(!a||!b||a===b)return alert('Trascina due digrammi diversi nelle aree di scambio.'); const tmp=state.hypotheses[a]||''; state.hypotheses[a]=state.hypotheses[b]||''; state.hypotheses[b]=tmp; renderAll(); persist()}
+function playfairDecryptDigramWithMatrix(cd,m){const pos={}; m.forEach((ch,i)=>pos[ch]={r:Math.floor(i/5),c:i%5}); pos.J=pos.I; const at=(r,c)=>m[((r+5)%5)*5+((c+5)%5)]; if(cd.length<2)return ''; const a=cd[0]==='J'?'I':cd[0], b=cd[1]==='J'?'I':cd[1], pa=pos[a], pb=pos[b]; if(!pa||!pb)return ''; if(pa.r===pb.r)return at(pa.r,pa.c-1)+at(pb.r,pb.c-1); if(pa.c===pb.c)return at(pa.r-1,pa.c)+at(pb.r-1,pb.c); return at(pa.r,pb.c)+at(pb.r,pa.c)}
+function shuffle(a){a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]} return a}
+function generateMatrixCandidates(){const box=$('matrixCandidates'); if(!box)return; const pairs=Object.entries(state.hypotheses).map(([c,p])=>[c,normHyp(p)]).filter(([c,p])=>c.length===2&&p.length>=2&&!p.includes('?')).map(([c,p])=>[c,p.slice(0,2).replace(/J/g,'I')]); if(!pairs.length){box.innerHTML='Inserisci prima alcune ipotesi digramma cifrato → digramma chiaro.'; return} const alpha='ABCDEFGHIKLMNOPQRSTUVWXYZ'.split(''); const tries=Math.max(100,Math.min(50000,+$('matrixTryCount').value||3000)); const best=[]; for(let t=0;t<tries;t++){const m=shuffle(alpha); let ok=0; const hits=[]; for(const [c,p] of pairs){const dec=playfairDecryptDigramWithMatrix(c,m); if(dec===p){ok++; hits.push(`${c}→${p}`)}} const score=ok/pairs.length; if(best.length<8||score>best[best.length-1].score){best.push({score,ok,m,hits}); best.sort((a,b)=>b.score-a.score); best.splice(8)}} box.innerHTML=best.map((b,i)=>{const key=matrixKeyString(b.m); return `<div class="matrix-candidate"><div><strong>#${i+1}</strong> score ${b.ok}/${pairs.length} (${fmtPct(b.score*100)}) <span class="muted">${esc(b.hits.join(' · ')||'nessun vincolo pieno')}</span></div><div class="matrix-key">chiave/matrice: ${esc(key)}</div><div class="matrix-actions"><button type="button" class="matrix-adopt-btn" data-key="${esc(key)}">Adotta matrice</button><button type="button" class="matrix-copy-btn" data-key="${esc(key)}">Copia chiave</button></div><div class="matrix-mini">${b.m.map(ch=>`<span>${ch==='I'?'I/J':ch}</span>`).join('')}</div></div>`}).join(''); box.querySelectorAll('.matrix-adopt-btn').forEach(btn=>btn.onclick=e=>{const key=e.currentTarget.dataset.key; adoptMatrixKey(key); showCopyToast(e.currentTarget,'Matrice adottata')}); box.querySelectorAll('.matrix-copy-btn').forEach(btn=>btn.onclick=e=>copyWithFeedback(e.currentTarget.dataset.key,e.currentTarget,'Chiave copiata'))}
+
+
+
+function getAlignedDigramsFromText(offset){
+  const text=state.normalized||'';
+  let sub=text.slice(offset);
+  if(sub.length%2!==0)sub=sub.slice(0,-1);
+  const out=[];
+  for(let i=0;i<sub.length;i+=2){
+    const dig=sub.slice(i,i+2);
+    if(dig.length===2)out.push({digram:dig,index:i/2,letterStart:offset+i});
+  }
+  return out;
+}
+function getAlignedDoubleStats(offset){
+  const aligned=getAlignedDigramsFromText(offset);
+  const doubles=aligned.filter(x=>x.digram[0]===x.digram[1]);
+  const grouped=new Map();
+  for(const x of doubles){
+    if(!grouped.has(x.digram))grouped.set(x.digram,[]);
+    grouped.get(x.digram).push(x);
+  }
+  return {offset,totalPairs:aligned.length,totalDoubles:doubles.length,doubles,grouped};
+}
+function isAlignedDoubleDigramAtIndex(i){
+  const d=state.digrams[i]||'';
+  return d.length===2 && d[0]===d[1];
+}
+function formatDoubleGroups(grouped){
+  if(!grouped.size)return '<span class="pf-ok-digram">nessun doppio allineato</span>';
+  return [...grouped.entries()].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0])).map(([d,items])=>{
+    const pos=items.slice(0,10).map(x=>x.index+1).join(', ');
+    const more=items.length>10?' …':'';
+    return `<span class="bad-digram">${esc(d)} ×${items.length} <span class="muted">pos. ${esc(pos)}${more}</span></span>`;
+  }).join('');
+}
+function playfairStructuralVerdict(off0,off1){
+  const len=state.normalized.length;
+  if(!len)return {cls:'warn',html:'Inserisci un testo per valutare la compatibilità strutturale con Playfair.'};
+  const hasJ=state.raw.toUpperCase().includes('J');
+  const letters=new Set(state.normalized.split(''));
+  const alphabet25=letters.size===25;
+  const even=len%2===0;
+  const best=off0.totalDoubles<=off1.totalDoubles?off0:off1;
+  const selectedOffset=0;
+  const selected=off0;
+  const notes=[];
+  if(hasJ)notes.push('J presente nel testo originale');
+  if(!alphabet25)notes.push(`alfabeto osservato di ${letters.size} lettere`);
+  if(!even)notes.push('lunghezza normalizzata dispari');
+  if(selected.totalDoubles===0 && !hasJ && alphabet25 && even){
+    return {cls:'good',html:`<strong>Compatibilità strutturale buona con Playfair standard.</strong> Nell’allineamento corrente non ci sono digrammi cifrati doppi. Inoltre J è assente, l’alfabeto osservato è di 25 lettere e la lunghezza è pari. Questo non prova Playfair, ma non lo contraddice.`};
+  }
+  if(selected.totalDoubles===0){
+    return {cls:'warn',html:`<strong>Nessun doppio nell’allineamento corrente.</strong> Il vincolo principale del Playfair standard è rispettato, ma restano da valutare gli altri indizi.${notes.length?`<br><span class="muted">Note: ${esc(notes.join(' · '))}.</span>`:''}`};
+  }
+  if(selected.totalDoubles>0 && best.totalDoubles===0 && best.offset!==selectedOffset){
+    return {cls:'warn',html:`<strong>Possibile disallineamento.</strong> L’allineamento corrente contiene ${selected.totalDoubles} digrammi doppi, ma l’offset ${best.offset} non ne contiene. Se il messaggio contiene una nulla iniziale o un carattere spurio, Playfair resta possibile con offset alternativo.`};
+  }
+  if(selected.totalDoubles<=2){
+    return {cls:'warn',html:`<strong>Playfair standard sospetto.</strong> Nell’allineamento corrente compaiono ${selected.totalDoubles} digrammi cifrati doppi. In Playfair standard non dovrebbero comparire, salvo disallineamento, nulle, trasposizione successiva o variante non standard.`};
+  }
+  return {cls:'bad',html:`<strong>Forte evidenza contro Playfair standard semplice.</strong> Nell’allineamento corrente compaiono ${selected.totalDoubles} digrammi cifrati doppi. Coppie come QQ, LL o AA sono difficilmente compatibili con Playfair standard se l’allineamento è corretto e non sono state applicate trasformazioni successive.`};
+}
+function renderPlayfairStructuralCheck(){
+  const box=$('playfairStructuralCheck');
+  if(!box)return;
+  const off0=getAlignedDoubleStats(0), off1=getAlignedDoubleStats(1);
+  const verdict=playfairStructuralVerdict(off0,off1);
+  const cardCls=st=>st.totalDoubles===0?'good':(st.totalDoubles<=2?'warn':'bad');
+  const pct=st=>st.totalPairs?st.totalDoubles/st.totalPairs*100:0;
+  box.innerHTML=`<div class="pf-check-grid">
+    <div class="pf-check-card ${cardCls(off0)}">
+      <div class="pf-check-title">Offset 0 — coppie fisse 1-2, 3-4...</div>
+      <div class="pf-check-meta">Coppie analizzate: <strong>${off0.totalPairs}</strong><br>Digrammi doppi allineati: <strong>${off0.totalDoubles}</strong> (${fmtPct(pct(off0))})</div>
+      <div class="pf-doubles">${formatDoubleGroups(off0.grouped)}</div>
+    </div>
+    <div class="pf-check-card ${cardCls(off1)}">
+      <div class="pf-check-title">Offset 1 — ignora la prima lettera</div>
+      <div class="pf-check-meta">Coppie analizzate: <strong>${off1.totalPairs}</strong><br>Digrammi doppi allineati: <strong>${off1.totalDoubles}</strong> (${fmtPct(pct(off1))})</div>
+      <div class="pf-doubles">${formatDoubleGroups(off1.grouped)}</div>
+    </div>
+  </div>
+  <div class="pf-verdict ${verdict.cls}">${verdict.html}</div>
+  <table class="pf-mini-table"><thead><tr><th>Regola</th><th>Implicazione</th></tr></thead><tbody>
+    <tr><td>0 doppi allineati</td><td>Compatibile con Playfair standard, ma non dimostrativo.</td></tr>
+    <tr><td>1-2 doppi allineati</td><td>Sospetto: controllare offset, nulle o errori di trascrizione.</td></tr>
+    <tr><td>&gt;2 doppi allineati</td><td>Forte indizio contro Playfair standard semplice.</td></tr>
+  </tbody></table>`;
+}
+function positionsForDigram(d,limit=8){const out=[]; for(let i=0;i<state.digrams.length;i++){if(state.digrams[i]===d){out.push(i+1); if(out.length>=limit)break}} return out}
+function digramEntropy(){const total=state.digrams.length; if(!total)return 0; let h=0; for(const f of state.counts.values()){const p=f/total; h-=p*Math.log2(p)} return h}
+function digramIC(){const n=state.digrams.length; if(n<2)return 0; let num=0; for(const f of state.counts.values())num+=f*(f-1); return num/(n*(n-1))}
+function fmtNum(v,d=3){return Number(v||0).toFixed(d)}
+function renderDigramStatistics(){const box=$('digramStats'), topBox=$('digramTopTable'), sigBox=$('digramSignals'); if(!box||!topBox||!sigBox)return; const total=state.digrams.length, unique=state.counts.size; const repeated=[...state.counts.entries()].filter(([,f])=>f>1); const singletons=[...state.counts.entries()].filter(([,f])=>f===1); const maxEntry=[...state.counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0]||['--',0]; const duplicateOccurrences=Math.max(0,total-unique); const repeatRate=total?duplicateOccurrences/total*100:0; const hapaxRate=unique?singletons.length/unique*100:0; const coverageTop10=total?topCipherDigrams().slice(0,10).reduce((s,d)=>s+(state.counts.get(d)||0),0)/total*100:0; const entropy=digramEntropy(); const maxEntropy=Math.log2(625); const normEntropy=maxEntropy?entropy/maxEntropy*100:0; const ic=digramIC(); const seqStats=getSeqLengthStats(); const maxSeq=seqStats.length?seqStats[seqStats.length-1]:null; const letters=new Set(state.normalized.split('')); const missing='ABCDEFGHIKLMNOPQRSTUVWXYZ'.split('').filter(ch=>!letters.has(ch)); box.innerHTML=`<div class="digram-stats-grid">
+  <div class="digram-stat-card"><div class="value">${total}</div><div class="label">digrammi totali</div><div class="hint">blocchi di 2 lettere analizzati</div></div>
+  <div class="digram-stat-card"><div class="value">${unique}</div><div class="label">digrammi distinti</div><div class="hint">su massimo teorico 25×25 = 625</div></div>
+  <div class="digram-stat-card"><div class="value">${repeated.length}</div><div class="label">digrammi ripetuti</div><div class="hint">tipi con frequenza maggiore di 1</div></div>
+  <div class="digram-stat-card"><div class="value">${fmtPct(repeatRate)}</div><div class="label">tasso di ripetizione</div><div class="hint">occorrenze oltre la prima / totale</div></div>
+  <div class="digram-stat-card"><div class="value">${maxEntry[0]} · ${maxEntry[1]}</div><div class="label">digramma più frequente</div><div class="hint">${total?fmtPct(maxEntry[1]/total*100):'0.00%'} del messaggio</div></div>
+  <div class="digram-stat-card"><div class="value">${fmtPct(coverageTop10)}</div><div class="label">copertura top 10</div><div class="hint">quota coperta dai 10 digrammi più frequenti</div></div>
+  <div class="digram-stat-card"><div class="value">${fmtNum(entropy,2)} bit</div><div class="label">entropia dei digrammi</div><div class="hint">${fmtPct(normEntropy)} rispetto a log₂(625)</div></div>
+  <div class="digram-stat-card"><div class="value">${fmtNum(ic,4)}</div><div class="label">indice coincidenza digrammi</div><div class="hint">più alto = più ripetizioni strutturate</div></div>
+  <div class="digram-stat-card"><div class="value">${fmtPct(hapaxRate)}</div><div class="label">digrammi una sola volta</div><div class="hint">hapax sui digrammi distinti</div></div>
+  <div class="digram-stat-card"><div class="value">${maxSeq?`${maxSeq.n} dig.`:'--'}</div><div class="label">sequenza ricorrente più lunga</div><div class="hint">${maxSeq?`${maxSeq.count} sequenze massimali di questa lunghezza`:'nessuna con i filtri correnti'}</div></div>
+  <div class="digram-stat-card"><div class="value">${missing.length}</div><div class="label">lettere mancanti</div><div class="hint">${missing.join(' ')||'nessuna'} nel testo normalizzato</div></div>
+  <div class="digram-stat-card"><div class="value">${total?fmtPct(unique/total*100):'0.00%'}</div><div class="label">rapporto distinti/totale</div><div class="hint">basso = molte ripetizioni sfruttabili</div></div>
+</div>`; const top=topCipherDigrams().slice(0,20); topBox.innerHTML=top.length?top.map((d,i)=>`<tr><td>${i+1}</td><td class="mono">${d}</td><td>${state.counts.get(d)}</td><td>${fmtPct((state.counts.get(d)||0)/Math.max(1,total)*100)}</td><td class="pos-list">${positionsForDigram(d).join(', ')}${state.counts.get(d)>8?' …':''}</td></tr>`).join(''):'<tr><td colspan="5" class="muted">Analizza un testo per visualizzare i digrammi più frequenti.</td></tr>'; const signals=[]; if(!total){signals.push(['warn','Inserisci un testo cifrato per ottenere indicatori crittoanalitici.'])} else { if(!state.raw.toUpperCase().includes('J'))signals.push(['good','La lettera J non compare nel testo originale: indizio coerente con Playfair classico I/J.']); else signals.push(['warn','La J compare nel testo originale: possibile variante o indizio contro Playfair classico.']); if(letters.size===25)signals.push(['good','L’alfabeto osservato contiene esattamente 25 lettere: compatibile con una matrice Playfair 5×5.']); else signals.push(['warn',`Alfabeto osservato di ${letters.size} lettere: dato utile ma non conclusivo.`]); if(state.normalized.length%2===0)signals.push(['good','La lunghezza normalizzata è pari: coerente con un cifrario a digrammi.']); else signals.push(['bad','La lunghezza normalizzata è dispari: verifica trascrizione o filler finale.']); if(maxSeq&&maxSeq.n>=8)signals.push(['good',`Sono presenti sequenze ricorrenti lunghe fino a ${maxSeq.n} digrammi: ottimi candidati per crib e ipotesi di frase.`]); else if(maxSeq&&maxSeq.n>=4)signals.push(['warn',`Sequenze ricorrenti fino a ${maxSeq.n} digrammi: utili, ma meno decisive delle sequenze lunghe.`]); else signals.push(['warn','Poche sequenze ricorrenti lunghe con i filtri correnti: prova ad abbassare la frequenza minima o controllare la normalizzazione.']); if(repeatRate>25)signals.push(['good',`Ripetizione dei digrammi abbastanza alta (${fmtPct(repeatRate)}): il testo offre materiale per analisi statistica.`]); else signals.push(['warn',`Ripetizione dei digrammi contenuta (${fmtPct(repeatRate)}): le ipotesi potrebbero essere meno stabili.`]); const dbl0=getAlignedDoubleStats(0), dbl1=getAlignedDoubleStats(1); if(dbl0.totalDoubles===0)signals.push(['good','Nessun digramma cifrato doppio nell’allineamento corrente: il vincolo Playfair AA/QQ/LL è rispettato.']); else if(dbl0.totalDoubles<=2)signals.push(['warn',`Sono presenti ${dbl0.totalDoubles} digrammi cifrati doppi allineati: Playfair standard è sospetto.`]); else signals.push(['bad',`Sono presenti ${dbl0.totalDoubles} digrammi cifrati doppi allineati: forte indizio contro Playfair standard semplice.`]); if(dbl0.totalDoubles>0&&dbl1.totalDoubles===0)signals.push(['warn','L’offset 1 elimina i digrammi doppi: valutare possibile disallineamento o carattere spurio iniziale.']); if(normEntropy<75)signals.push(['good',`Entropia normalizzata non troppo alta (${fmtPct(normEntropy)}): possibile struttura sfruttabile.`]); else signals.push(['warn',`Entropia normalizzata elevata (${fmtPct(normEntropy)}): distribuzione più uniforme, analisi manuale più difficile.`]); } sigBox.innerHTML=signals.map(([cls,txt])=>`<div class="signal-item ${cls}">${txt}</div>`).join('')}
+
+
+
+function showCopyToast(anchor,msg){let toast=document.querySelector('.copy-toast'); if(!toast){toast=document.createElement('div'); toast.className='copy-toast'; document.body.appendChild(toast)} toast.textContent=msg||'Copiato'; const rect=anchor&&anchor.getBoundingClientRect?anchor.getBoundingClientRect():{left:window.innerWidth/2,top:window.innerHeight/2,width:0}; toast.style.left=Math.max(8,Math.min(window.innerWidth-180,rect.left+rect.width/2-70))+'px'; toast.style.top=Math.max(8,rect.top-38)+'px'; toast.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>toast.classList.remove('show'),1500)}
+async function copyWithFeedback(text,anchor,msg){try{await navigator.clipboard.writeText(text||''); showCopyToast(anchor,msg||'Copiato'); return true}catch(err){console.error(err); const ta=document.createElement('textarea'); ta.value=text||''; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.focus(); ta.select(); let ok=false; try{ok=document.execCommand('copy')}catch{} document.body.removeChild(ta); showCopyToast(anchor,ok?(msg||'Copiato'):'Copia non riuscita'); return ok}}
+function parseHypothesisText(text){const rows=String(text||'').split(/\r?\n/); const parsed=[]; const errors=[]; rows.forEach((line,idx)=>{const original=line; const clean=line.trim(); if(!clean||clean.startsWith('#')||clean.startsWith('//'))return; const normalized=clean.toUpperCase().replace(/[→:;,	]+/g,'=').replace(/\s*=\s*/g,'=').replace(/\s+/g,''); const m=normalized.match(/^([A-Z]{2})=([A-Z?]{1,8})$/); if(!m){errors.push(`riga ${idx+1}: ${original}`); return} parsed.push({cipher:m[1],plain:normHyp(m[2]),line:idx+1})}); return {parsed,errors}}
+function setHypIoSummary(msg,kind='muted'){const el=$('hypIoSummary'); if(!el)return; el.className='hyp-io-summary '+kind; el.textContent=msg}
+function importHypothesesFromText(text){const {parsed,errors}=parseHypothesisText(text); let applied=0, skippedLocked=0, skippedMissing=0, skippedInvalid=0; const seen=new Set(); for(const item of parsed){const d=item.cipher, h=item.plain; if(seen.has(d)){skippedInvalid++; continue} seen.add(d); if(!h||h.includes('?')){skippedInvalid++; continue} if(state.counts.size && !state.counts.has(d)){skippedMissing++; if(!(d in state.hypotheses))state.hypotheses[d]=''} if(isLocked(d)){skippedLocked++; continue} setHyp(d,h); if(!(d in state.notes))state.notes[d]=''; applied++} renderAll(); persist(); const pieces=[`${applied} associazioni importate`]; if(skippedLocked)pieces.push(`${skippedLocked} bloccate non sovrascritte`); if(skippedMissing)pieces.push(`${skippedMissing} digrammi non presenti nel testo corrente`); if(skippedInvalid||errors.length)pieces.push(`${skippedInvalid+errors.length} righe ignorate`); setHypIoSummary(pieces.join(' · '), errors.length||skippedInvalid?'warn':'good'); if(errors.length)console.warn('Righe import ipotesi ignorate:',errors); return {applied,errors}}
+async function pasteHypothesesFromClipboard(btn){try{const text=await navigator.clipboard.readText(); $('hypImportExportBox').value=text; const result=importHypothesesFromText(text); showCopyToast(btn,result.applied?`Importate ${result.applied}`:'Nessuna importata')}catch(err){console.error(err); setHypIoSummary('Impossibile leggere la clipboard. Incolla il testo nel box e usa “Importa dal box”.','bad')}}
+function exportHypothesesText(){const rows=Object.entries(state.hypotheses||{}).filter(([,h])=>normHyp(h)).sort((a,b)=>{const fa=state.counts.get(a[0])||0, fb=state.counts.get(b[0])||0; return (fb-fa)||a[0].localeCompare(b[0])}).map(([d,h])=>`${d}=${normHyp(h)}`); return rows.join('\n')}
+function exportHypothesesToBox(){const text=exportHypothesesText(); $('hypImportExportBox').value=text; setHypIoSummary(text?`${text.split('\n').length} associazioni esportate nel box.`:'Nessuna ipotesi da esportare.','good'); return text}
+async function copyHypothesesExport(btn){const text=exportHypothesesToBox(); if(!text){showCopyToast(btn,'Nessuna ipotesi'); return} await copyWithFeedback(text,btn,'Export copiato')}
+function clearUnlockedHypotheses(){if(!confirm('Cancellare tutte le ipotesi non bloccate? Le associazioni con lucchetto verranno mantenute.'))return; let cleared=0; for(const d of Object.keys(state.hypotheses||{})){if(state.hypotheses[d]&&!isLocked(d)){state.hypotheses[d]=''; cleared++}} renderAll(); persist(); setHypIoSummary(`${cleared} ipotesi non bloccate cancellate.`,cleared?'warn':'good')}
+
+function renderAll(){renderStats(); renderItalianList(); renderAssignmentTable(); renderBoard(); renderDigramTable(); renderPlain(); renderFreqChart(); renderDigramStatistics(); renderPlayfairStructuralCheck(); renderSeqLengthStats(); renderSeqList(); renderSeqDetail()}
+function focusHyp(d){setTimeout(()=>{const input=document.querySelector(`.hyp-input[data-digram="${CSS.escape(d)}"]`); if(input){input.focus(); input.select()}},0)}
+function scrollFirstSeq(k){const starts=state.seqMap.get(k)||[]; if(starts.length)scrollChip(starts[0])}
+function scrollChip(i){setTimeout(()=>{const el=document.querySelector(`.chip[data-index="${i}"]`); if(el)el.scrollIntoView({behavior:'smooth',block:'center',inline:'center'})},0)}
+function buildMatrix(keyword){const alpha='ABCDEFGHIKLMNOPQRSTUVWXYZ'; const clean=(keyword||'').toUpperCase().replace(/J/g,'I').replace(/[^A-Z]/g,''); const seen=new Set(); let seq=''; for(const ch of clean+alpha)if(alpha.includes(ch)&&!seen.has(ch)){seen.add(ch); seq+=ch} return seq.split('')}
+function renderMatrix(){const m=buildMatrix($('keywordInput').value), box=$('matrix'); box.innerHTML=''; m.forEach(ch=>{const d=document.createElement('div'); d.className='cell'; d.textContent=ch==='I'?'I/J':ch; box.appendChild(d)}); return m}
+function playfairDecrypt(){const m=renderMatrix(), pos={}; m.forEach((ch,i)=>pos[ch]={r:Math.floor(i/5),c:i%5}); pos.J=pos.I; const at=(r,c)=>m[((r+5)%5)*5+((c+5)%5)]; const out=[]; for(const d of state.digrams){if(d.length<2){out.push('?');continue} const a=d[0]==='J'?'I':d[0], b=d[1]==='J'?'I':d[1], pa=pos[a], pb=pos[b]; if(!pa||!pb){out.push('??');continue} if(pa.r===pb.r)out.push(at(pa.r,pa.c-1)+at(pb.r,pb.c-1)); else if(pa.c===pb.c)out.push(at(pa.r-1,pa.c)+at(pb.r-1,pb.c)); else out.push(at(pa.r,pb.c)+at(pb.r,pa.c))} $('decryptOutput').textContent=out.join(' ')}
+
+function playfairDecryptPreview(){
+  const m=renderMatrix();
+  const pos={};
+  m.forEach((ch,i)=>pos[ch]={r:Math.floor(i/5),c:i%5});
+  pos.J=pos.I;
+  const at=(r,c)=>m[((r+5)%5)*5+((c+5)%5)];
+  const out=[];
+  for(const d of state.digrams){
+    if(d.length<2){out.push('?');continue}
+    const a=d[0]==='J'?'I':d[0], b=d[1]==='J'?'I':d[1], pa=pos[a], pb=pos[b];
+    if(!pa||!pb){out.push('??');continue}
+    if(pa.r===pb.r)out.push(at(pa.r,pa.c-1)+at(pb.r,pb.c-1));
+    else if(pa.c===pb.c)out.push(at(pa.r-1,pa.c)+at(pb.r-1,pb.c));
+    else out.push(at(pa.r,pb.c)+at(pb.r,pa.c));
+  }
+  $('decryptOutput').textContent=out.join(' ');
+}
+
+function playfairDecryptAndApply(){
+  if(!$('keywordInput').value.trim()){
+    alert('Inserisci una parola chiave prima di decifrare.');
+    return;
+  }
+
+  const m=renderMatrix();
+  const pos={};
+  m.forEach((ch,i)=>pos[ch]={r:Math.floor(i/5),c:i%5});
+  pos.J=pos.I;
+  const at=(r,c)=>m[((r+5)%5)*5+((c+5)%5)];
+
+  const decryptedPairs=[];
+  let appliedCount=0;
+  let lockedSkipped=0;
+
+  // Decifra ogni digramma e applica come ipotesi
+  const uniqueDigrams=new Set(state.digrams);
+  for(const d of uniqueDigrams){
+    if(d.length<2)continue;
+
+    const a=d[0]==='J'?'I':d[0];
+    const b=d[1]==='J'?'I':d[1];
+    const pa=pos[a];
+    const pb=pos[b];
+
+    if(!pa||!pb)continue;
+
+    let decrypted;
+    if(pa.r===pb.r){
+      decrypted=at(pa.r,pa.c-1)+at(pb.r,pb.c-1);
+    }else if(pa.c===pb.c){
+      decrypted=at(pa.r-1,pa.c)+at(pb.r-1,pb.c);
+    }else{
+      decrypted=at(pa.r,pb.c)+at(pb.r,pa.c);
+    }
+
+    decryptedPairs.push(`${d}→${decrypted}`);
+
+    // Applica l'ipotesi se non è bloccata
+    if(isLocked(d)){
+      lockedSkipped++;
+    }else{
+      setHyp(d,decrypted);
+      appliedCount++;
+    }
+  }
+
+  // Mostra output completo
+  const out=[];
+  for(const d of state.digrams){
+    if(d.length<2){out.push('?');continue}
+    const a=d[0]==='J'?'I':d[0], b=d[1]==='J'?'I':d[1], pa=pos[a], pb=pos[b];
+    if(!pa||!pb){out.push('??');continue}
+    if(pa.r===pb.r)out.push(at(pa.r,pa.c-1)+at(pb.r,pb.c-1));
+    else if(pa.c===pb.c)out.push(at(pa.r-1,pa.c)+at(pb.r-1,pb.c));
+    else out.push(at(pa.r,pb.c)+at(pb.r,pa.c));
+  }
+  $('decryptOutput').textContent=out.join(' ');
+
+  // Aggiorna tutti i pannelli
+  renderAll();
+  persist();
+
+  // Mostra feedback
+  let msg=`✓ ${appliedCount} ipotesi applicate dalla matrice Playfair`;
+  if(lockedSkipped>0)msg+=` (${lockedSkipped} digrammi bloccati non modificati)`;
+  alert(msg);
+}
+function applyRank(){topCipherDigrams().forEach((d,i)=>{if(i<italianDigrams.length&&!isLocked(d))setHyp(d,italianDigrams[i])}); renderAll(); persist()}
+function clearAssignments(){for(const d of Object.keys(state.hypotheses)){if(!isLocked(d)&&italianDigrams.includes(state.hypotheses[d]))clearHyp(d)} renderAll(); persist()}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function getVal(id,fallback=''){const el=$(id); return el?el.value:fallback}
+function getChecked(id,fallback=false){const el=$(id); return el?!!el.checked:fallback}
+function setVal(id,value){const el=$(id); if(el&&value!==undefined&&value!==null)el.value=value}
+function setChecked(id,value){const el=$(id); if(el&&typeof value==='boolean')el.checked=value}
+function collectConfig(){const currentRaw=$('cipherInput')?.value||state.raw||''; const currentNormalized=norm(currentRaw); return {app:'Playfair Digram Lab',version:'v21',savedAt:new Date().toISOString(),raw:currentRaw,normalized:currentNormalized,hypotheses:state.hypotheses||{},lockedHypotheses:state.lockedHypotheses||{},notes:state.notes||{},seqNotes:state.seqNotes||{},seqHyps:state.seqHyps||{},selectedSeq:state.selectedSeq||null,selected:state.selected||null,ui:{removeNonLetters:getChecked('removeNonLetters',true),mapJ:getChecked('mapJ',true),showIndex:getChecked('showIndex',true),sortMode:getVal('sortMode','pos'),boardFilter:getVal('boardFilter',''),boardStatusFilter:getVal('boardStatusFilter','all'),topAssignCount:getVal('topAssignCount','25'),assignmentMode:getVal('assignmentMode','select'),assignmentFilter:getVal('assignmentFilter',''),assignmentSortMode:getVal('assignmentSortMode','freqDesc'),digramFilter:getVal('digramFilter',''),digramStatusFilter:getVal('digramStatusFilter','all'),digramSortMode:getVal('digramSortMode','freqDesc'),seqLen:getVal('seqLen',''),minSeqFreq:getVal('minSeqFreq','2'),seqSearch:getVal('seqSearch',''),seqDigramFilter:getVal('seqDigramFilter',''),overlapSeq:getChecked('overlapSeq',true),keyword:getVal('keywordInput',''),matrixTryCount:getVal('matrixTryCount','3000')},italianDigrams}}
+function applyConfig(cfg){if(!cfg||typeof cfg!=='object')throw new Error('File JSON non valido'); const ui=cfg.ui||cfg; state.hypotheses=cfg.hypotheses||{}; state.lockedHypotheses=cfg.lockedHypotheses||cfg.locks||{}; state.notes=cfg.notes||{}; state.seqNotes=cfg.seqNotes||{}; state.seqHyps=cfg.seqHyps||{}; state.selectedSeq=cfg.selectedSeq||null; state.selected=cfg.selected||null; setChecked('removeNonLetters',ui.removeNonLetters); setChecked('mapJ',ui.mapJ); setChecked('showIndex',ui.showIndex); setVal('sortMode',ui.sortMode); setVal('boardFilter',ui.boardFilter); setVal('boardStatusFilter',ui.boardStatusFilter); setVal('topAssignCount',ui.topAssignCount); setVal('assignmentMode',ui.assignmentMode); setVal('assignmentFilter',ui.assignmentFilter); setVal('assignmentSortMode',ui.assignmentSortMode); setVal('digramFilter',ui.digramFilter); setVal('digramStatusFilter',ui.digramStatusFilter); setVal('digramSortMode',ui.digramSortMode); setVal('minSeqFreq',ui.minSeqFreq); setVal('seqSearch',ui.seqSearch); setVal('seqDigramFilter',ui.seqDigramFilter); setChecked('overlapSeq',ui.overlapSeq); setVal('keywordInput',ui.keyword); setVal('matrixTryCount',ui.matrixTryCount); $('cipherInput').value=cfg.raw||''; state.raw=$('cipherInput').value; state.normalized=norm(state.raw); state.digrams=split(state.normalized); state.counts=new Map(); for(const d of state.digrams)state.counts.set(d,(state.counts.get(d)||0)+1); for(const d of state.counts.keys()){if(!(d in state.hypotheses))state.hypotheses[d]=''; if(!(d in state.notes))state.notes[d]=''} clearSeqCache(); updateSeqLengthOptions(); if(ui.seqLen)setVal('seqLen',ui.seqLen); buildSeqMap(); renderAll(); renderMatrix(); persist();}
+function persist(){localStorage.setItem('playfairDigramLabV21',JSON.stringify(collectConfig()))}
+function restore(){try{const saved=JSON.parse(localStorage.getItem('playfairDigramLabV21')||'{}'); if(saved&&Object.keys(saved).length)applyConfig(saved); else {updateSeqLengthOptions(); renderAll(); renderMatrix()}}catch(err){console.warn('Ripristino configurazione fallito:',err); updateSeqLengthOptions(); renderAll(); renderMatrix()}}
+function exportJson(){const data=collectConfig(); const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='playfair-digram-lab-config.json'; a.click(); URL.revokeObjectURL(a.href); showCopyToast($('exportBtn'),'Configurazione salvata')}
+async function importConfigFromFile(file){if(!file)return; try{const data=JSON.parse(await file.text()); applyConfig(data); if($('importFile'))$('importFile').value=''; showCopyToast($('importBtn'),'Configurazione caricata')}catch(err){console.error(err); alert('Impossibile caricare la configurazione JSON: '+err.message)}}
+$('analyzeBtn').onclick=analyze; $('cipherInput').addEventListener('input',analyze); $('removeNonLetters').onchange=analyze; $('mapJ').onchange=analyze; $('showIndex').onchange=renderBoard; $('sortMode').onchange=renderBoard; $('boardFilter').oninput=()=>{renderBoard();persist()}; $('boardStatusFilter').onchange=()=>{renderBoard();persist()}; setupDropZone('swapA'); setupDropZone('swapB'); $('swapHypBtn').onclick=swapHypotheses; $('seqAnalyzeBtn').onclick=()=>{clearSeqCache(); updateSeqLengthOptions(); buildSeqMap(); renderAll(); persist()}; $('seqLen').onchange=()=>{state.selectedSeq=null; buildSeqMap(); renderAll(); persist()}; let seqFilterTimer=null; $('minSeqFreq').oninput=()=>{state.selectedSeq=null; clearTimeout(seqFilterTimer); seqFilterTimer=setTimeout(()=>{clearSeqCache(); updateSeqLengthOptions(); buildSeqMap(); renderAll(); persist()},180)}; $('seqSearch').oninput=renderSeqList; $('seqDigramFilter').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,2); renderSeqList(); persist()}; $('overlapSeq').onchange=()=>{state.selectedSeq=null; clearSeqCache(); updateSeqLengthOptions(); buildSeqMap(); renderAll(); persist()}; $('clearSeqBtn').onclick=()=>{state.selectedSeq=null; renderAll()}; $('copyVisibleSeqBtn').onclick=e=>copyVisibleSequences(e.currentTarget); $('copySeqBtn').onclick=async e=>{if(state.selectedSeq)try{await copyWithFeedback(state.selectedSeq+' => '+resolvedText(state.selectedSeq),e.currentTarget,'Sequenza copiata')}catch{}}; $('seqHypInput').oninput=e=>{if(state.selectedSeq){state.seqHyps[state.selectedSeq]=e.target.value.toUpperCase(); renderSeqList(); persist()}}; $('seqNoteInput').oninput=e=>{if(state.selectedSeq){state.seqNotes[state.selectedSeq]=e.target.value; persist()}}; $('keywordInput').addEventListener('input',()=>{renderMatrix();persist()}); $('buildMatrixBtn').onclick=playfairDecryptPreview; $('tryDecryptBtn').onclick=playfairDecryptAndApply; $('generateMatricesBtn').onclick=generateMatrixCandidates; $('exportBtn').onclick=exportJson; $('importBtn').onclick=()=>$('importFile').click(); $('applyRankBtn').onclick=applyRank; $('clearAssignmentsBtn').onclick=clearAssignments; $('topAssignCount').oninput=()=>{renderAssignmentTable(); persist()}; $('assignmentFilter').oninput=()=>{renderAssignmentTable(); persist()}; $('assignmentSortMode').onchange=()=>{renderAssignmentTable(); persist()}; $('assignmentMode').onchange=e=>{if(e.target.value==='auto')applyRank()}; $('digramFilter').oninput=()=>{renderDigramTable(); persist()}; $('digramStatusFilter').onchange=()=>{renderDigramTable(); persist()}; $('digramSortMode').onchange=()=>{renderDigramTable(); persist()}; $('pasteHypBtn').onclick=e=>pasteHypothesesFromClipboard(e.currentTarget); $('importHypTextBtn').onclick=()=>importHypothesesFromText($('hypImportExportBox').value); $('exportHypBtn').onclick=exportHypothesesToBox; $('copyHypBtn').onclick=e=>copyHypothesesExport(e.currentTarget); $('clearUnlockedHypBtn').onclick=clearUnlockedHypotheses; $('importFile').onchange=async e=>{const f=e.target.files[0]; await importConfigFromFile(f)}; $('sampleBtn').onclick=()=>{$('cipherInput').value='VMDQEVHTQDLHBSAXQRVMDQEVHTXXVMDQEVHT'; $('keywordInput').value='VERME'; analyze(); renderMatrix(); playfairDecrypt()}; $('clearBtn').onclick=()=>{$('cipherInput').value=''; $('keywordInput').value=''; $('decryptOutput').textContent=''; Object.assign(state,{raw:'',normalized:'',digrams:[],counts:new Map(),hypotheses:{},lockedHypotheses:{},notes:{},selected:null,seqMap:new Map(),selectedSeq:null,seqNotes:{},seqHyps:{}}); localStorage.removeItem('playfairDigramLabV21'); renderAll(); renderMatrix()};
+
+// Context menu event listeners
+const chipMenu=$('chipContextMenu');
+if(chipMenu){
+  // Impedisci la propagazione dei click sul menu stesso
+  chipMenu.addEventListener('click',e=>e.stopPropagation());
+
+  chipMenu.querySelectorAll('.context-menu-item').forEach(item=>{
+    item.onclick=e=>{
+      e.stopPropagation();
+      if(item.classList.contains('disabled'))return;
+      handleChipContextMenuAction(item.dataset.action);
+    };
+  });
+}
+document.addEventListener('click',e=>{
+  // Chiudi il menu solo se si clicca fuori da esso
+  if(!e.target.closest('#chipContextMenu')){
+    hideChipContextMenu();
+  }
+});
+document.addEventListener('contextmenu',e=>{
+  if(!e.target.closest('.chip')){
+    hideChipContextMenu();
+  }
+});
+
+restore();
+})();
+</script>
+</body>
+</html>

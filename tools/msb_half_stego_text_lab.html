@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stego Text Lab — LSB/MSB, payload e secondo livello</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --border: #374151;
+      --good: #86efac;
+      --warn: #fde68a;
+      --bad: #fca5a5;
+      --blue: #93c5fd;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #020617, #0f172a);
+      color: var(--text);
+    }
+    header {
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, .92);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(8px);
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    header p { margin: 0; color: var(--muted); max-width: 1250px; }
+    main {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 18px;
+      padding: 18px;
+    }
+    .card {
+      background: rgba(17, 24, 39, .94);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.25);
+    }
+    .controls { display: flex; flex-direction: column; gap: 14px; }
+    label { display: block; font-weight: 650; margin-bottom: 6px; }
+    input[type="file"], select, button, input[type="number"], input[type="text"] {
+      width: 100%;
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 11px;
+      font-size: 14px;
+    }
+    input[type="checkbox"] { transform: translateY(1px); }
+    button {
+      cursor: pointer;
+      background: #075985;
+      border-color: #0ea5e9;
+      font-weight: 700;
+    }
+    button:hover { background: #0369a1; }
+    button.secondary { background: #374151; border-color: #4b5563; }
+    button.secondary:hover { background: #4b5563; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .inline { display: flex; align-items: center; gap: 9px; color: var(--muted); }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .preview {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    canvas {
+      max-width: 100%;
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      image-rendering: pixelated;
+    }
+    .canvasBox p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+    textarea {
+      width: 100%;
+      min-height: 320px;
+      resize: vertical;
+      background: #020617;
+      color: #d1d5db;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.35;
+      white-space: pre;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px; vertical-align: top; }
+    th { color: var(--muted); text-align: left; position: sticky; top: 86px; background: var(--panel); }
+    .scoreGood { color: var(--good); font-weight: 700; }
+    .scoreMid { color: var(--warn); font-weight: 700; }
+    .scoreBad { color: var(--bad); font-weight: 700; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .tab {
+      width: auto;
+      padding: 8px 10px;
+      background: var(--panel2);
+      border-color: var(--border);
+      font-weight: 600;
+    }
+    .tab.active { background: #075985; border-color: #38bdf8; }
+    .hidden { display: none; }
+    .small { font-size: 12px; color: var(--muted); }
+    .pill {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+    .warnBox {
+      border: 1px solid #854d0e;
+      background: rgba(113, 63, 18, .24);
+      color: #fde68a;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .goodBox {
+      border: 1px solid #166534;
+      background: rgba(20, 83, 45, .24);
+      color: #bbf7d0;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .miniBtn {
+      width: auto;
+      padding: 5px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin: 2px 4px 2px 0;
+      background: #374151;
+      border-color: #4b5563;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .viewer {
+      min-height: 520px;
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      overflow: auto;
+    }
+    .viewer img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      background: #111827;
+      border-radius: 8px;
+      image-rendering: auto;
+    }
+    .viewer iframe, .viewer object {
+      width: 100%;
+      height: 75vh;
+      border: 0;
+      border-radius: 8px;
+      background: white;
+    }
+    .viewer pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .busyOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 6, 23, .68);
+      backdrop-filter: blur(4px);
+    }
+    .busyOverlay.active { display: flex; }
+    .busyBox {
+      min-width: 260px;
+      max-width: 420px;
+      background: rgba(17, 24, 39, .96);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+      text-align: center;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      border: 5px solid #334155;
+      border-top-color: var(--accent);
+      animation: spin .9s linear infinite;
+    }
+    .busyTitle { font-weight: 800; margin-bottom: 6px; }
+    .busyMsg { color: var(--muted); font-size: 13px; line-height: 1.35; }
+    button:disabled, input:disabled, select:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 1180px) {
+      main { grid-template-columns: 1fr; }
+      .preview { grid-template-columns: 1fr; }
+      th { top: 0; }
+    }
+  </style>
+</head>
+<body>
+<div id="busyOverlay" class="busyOverlay" aria-live="polite" aria-busy="true">
+  <div class="busyBox">
+    <div class="spinner"></div>
+    <div class="busyTitle">Elaborazione in corso</div>
+    <div id="busyMsg" class="busyMsg">Attendere...</div>
+  </div>
+</div>
+<header>
+  <h1>Stego Text Lab — LSB/MSB, payload e secondo livello</h1>
+  <p>Laboratorio locale per cercare testo in immagini steganografiche. Priorità ai bit 0-3 RGB quando i 4 LSB contengono già una seconda immagine; MSB half mantenuto come controllo secondario.</p>
+</header>
+
+<main>
+  <aside class="card controls">
+    <section>
+      <label>Immagine stego originale</label>
+      <input id="file" type="file" accept="image/*" />
+      <p class="hint">Usa il file originale, non screenshot o esportazioni intermedie. L'elaborazione resta nel browser.</p>
+    </section>
+
+    <section>
+      <label>Preset di analisi</label>
+      <select id="preset">
+        <option value="lsbPayload" selected>Priorità payload: bit 0-3 RGB</option>
+        <option value="singleLow">Singoli LSB plane: bit 0/1/2/3 per canale</option>
+        <option value="hiddenImagePlanes">Secondo livello: bitplane dell'immagine nascosta ricostruita</option>
+        <option value="msbControl">Controllo MSB cover: bit 4-7</option>
+        <option value="custom">Manuale</option>
+      </select>
+      <p class="hint">Nel tuo caso i bit 4-7 sembrano cover. Il preset consigliato è “Priorità payload”.</p>
+    </section>
+
+    <section class="row">
+      <div>
+        <label>Canali</label>
+        <select id="channels">
+          <option value="RGB">RGB interlacciato</option>
+          <option value="R">R</option>
+          <option value="G">G</option>
+          <option value="B">B</option>
+          <option value="RG">RG</option>
+          <option value="RB">RB</option>
+          <option value="GB">GB</option>
+          <option value="RRRGGGBBB">R blocco, poi G, poi B</option>
+          <option value="BGR">BGR interlacciato</option>
+          <option value="GRB">GRB interlacciato</option>
+          <option value="BRG">BRG interlacciato</option>
+          <option value="GBR">GBR interlacciato</option>
+          <option value="RBG">RBG interlacciato</option>
+        </select>
+      </div>
+      <div>
+        <label>Bit</label>
+        <select id="bits">
+          <option value="0,1,2,3" selected>LSB half: 0,1,2,3</option>
+          <option value="0">bit 0</option>
+          <option value="1">bit 1</option>
+          <option value="2">bit 2</option>
+          <option value="3">bit 3</option>
+          <option value="4,5,6,7">MSB half: 4,5,6,7</option>
+          <option value="4">bit 4</option>
+          <option value="5">bit 5</option>
+          <option value="6">bit 6</option>
+          <option value="7">bit 7</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="row">
+      <div>
+        <label>Ordine bit nel byte</label>
+        <select id="bitOrder">
+          <option value="MSB">MSB-first</option>
+          <option value="LSB">LSB-first</option>
+        </select>
+      </div>
+      <div>
+        <label>Offset bit</label>
+        <input id="offset" type="number" value="0" min="0" max="7" />
+      </div>
+    </section>
+
+    <section class="row">
+      <div>
+        <label>Lettura pixel</label>
+        <select id="scan">
+          <option value="row">righe sx→dx, alto→basso</option>
+          <option value="rowReverse">righe dx→sx, alto→basso</option>
+          <option value="bottomUp">righe sx→dx, basso→alto</option>
+          <option value="col">colonne alto→basso</option>
+          <option value="colReverse">colonne basso→alto</option>
+        </select>
+      </div>
+      <div>
+        <label>Output</label>
+        <select id="mode">
+          <option value="ascii">ASCII stampabile</option>
+          <option value="latin1">Latin-1 grezzo</option>
+          <option value="hex">Hex dump</option>
+          <option value="bits">Bitstream</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="row">
+      <div>
+        <label>Byte skip iniziali</label>
+        <input id="byteSkip" type="number" value="0" min="0" />
+      </div>
+      <div>
+        <label>Limite byte output</label>
+        <input id="byteLimit" type="number" value="12000" min="0" />
+      </div>
+    </section>
+
+    <section class="inline">
+      <input id="trim" type="checkbox" checked />
+      <span>Trim trailing bits</span>
+    </section>
+
+    <section>
+      <label>Modalità ricerca testo</label>
+      <select id="textSearchMode">
+        <option value="standard">Standard: testo leggibile con spazi</option>
+        <option value="italianCompact" selected>Italiano compatto: alfanumerico senza spazi</option>
+        <option value="alnumCompact">Compatto generico: solo A-Z a-z 0-9</option>
+      </select>
+      <p class="hint">Usa “Italiano compatto” se il messaggio atteso è una stringa italiana continua, ad esempio <code>questoeunmessaggio...</code>, senza spazi.</p>
+    </section>
+
+    <section class="row">
+      <div>
+        <label>Blocco: start byte</label>
+        <input id="blockStart" type="number" value="0" min="0" />
+      </div>
+      <div>
+        <label>Blocco: end byte escluso</label>
+        <input id="blockEnd" type="number" value="0" min="0" />
+      </div>
+    </section>
+    <section class="row">
+      <button id="extractManual" class="secondary">Scarica blocco</button>
+      <button id="loadBlock" class="secondary">Mostra blocco</button>
+    </section>
+    <section>
+      <button id="previewManual" class="secondary">Visualizza blocco come immagine/PDF</button>
+    </section>
+    <p class="hint">Per JPG/PNG/ZIP il lab prova a individuare anche il fine file. Per GZIP/ZLIB non esiste un marker di fine semplice e affidabile: viene proposto il blocco fino al prossimo magic byte o a fine stream.</p>
+
+    <section>
+      <label>Filtro parole/marker</label>
+      <input id="markers" type="text" value="ciao,questo,messaggio,segreto,testo,nascosto,italiano,attenzione,operazione,coordinate,inviare,rinforzi,domani,attaccare,sanaa,yemen" />
+      <p class="hint">Usato nello scan automatico insieme a magic bytes. In modalità “Italiano compatto” puoi inserire parole italiane senza spazi: verranno cercate anche dentro stringhe continue.</p>
+    </section>
+
+    <section class="row">
+      <button id="run">Estrai</button>
+      <button id="auto">Scan mirato</button>
+    </section>
+    <section class="row">
+      <button id="exportHidden" class="secondary">Esporta immagine 4 LSB</button>
+      <button id="diagnose" class="secondary">Diagnosi layer</button>
+    </section>
+
+    <section class="goodBox">
+      Strategia consigliata: 1) file originale; 2) bit 0-3 RGB; 3) singoli bitplane 0/1/2/3 per R,G,B; 4) magic bytes; 5) solo dopo controllo MSB 4-7.
+    </section>
+  </aside>
+
+  <section>
+    <div class="preview">
+      <div class="card canvasBox">
+        <canvas id="original"></canvas>
+        <p id="meta">Nessuna immagine caricata.</p>
+      </div>
+      <div class="card canvasBox">
+        <canvas id="layer"></canvas>
+        <p id="layerMeta">Anteprima bit/layer selezionato.</p>
+      </div>
+      <div class="card canvasBox">
+        <canvas id="hidden"></canvas>
+        <p id="hiddenMeta">Ricostruzione 4 LSB RGB: <code>(pixel & 0x0F) &lt;&lt; 4</code>.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="textTab">Testo/byte estratti</button>
+        <button class="tab" data-tab="scanTab">Risultati scan</button>
+        <button class="tab" data-tab="diagTab">Diagnosi</button>
+        <button class="tab" data-tab="previewTab">Anteprima blocco</button>
+        <button class="tab" data-tab="helpTab">Metodo</button>
+      </div>
+
+      <div id="textTab">
+        <textarea id="out" spellcheck="false" placeholder="Carica un'immagine e premi Estrai..."></textarea>
+        <p class="small" id="stats"></p>
+      </div>
+
+      <div id="scanTab" class="hidden">
+        <div class="warnBox">Lo scan è euristico: un punteggio alto segnala candidati, non garantisce che il testo sia reale. Verifica sempre anteprima, hex e magic bytes.</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Score</th>
+              <th>Config</th>
+              <th>Indizi</th>
+              <th>Blocco</th>
+              <th>Anteprima</th>
+            </tr>
+          </thead>
+          <tbody id="results"></tbody>
+        </table>
+      </div>
+
+      <div id="diagTab" class="hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Densità 1</th>
+              <th>Transizioni</th>
+              <th>Interpretazione</th>
+            </tr>
+          </thead>
+          <tbody id="diagResults"></tbody>
+        </table>
+      </div>
+
+      <div id="previewTab" class="hidden">
+        <p class="small" id="previewInfo">Nessun blocco visualizzato.</p>
+        <div id="blobPreview" class="viewer">
+          <pre>Usa il pulsante “Anteprima” nei risultati dello scan oppure “Visualizza blocco come immagine/PDF”.</pre>
+        </div>
+      </div>
+
+      <div id="helpTab" class="hidden">
+        <p>Se dai 4 bit meno significativi hai già ricavato una seconda immagine, allora è molto probabile che i bit 0-3 contengano il payload principale. I bit 4-7 sono invece la parte più significativa del pixel della cover e quindi mostrano ancora strutture visive naturali.</p>
+        <p>La corrispondenza tipica è:</p>
+        <p><span class="pill">stego bit 3 → hidden bit 7</span><span class="pill">stego bit 2 → hidden bit 6</span><span class="pill">stego bit 1 → hidden bit 5</span><span class="pill">stego bit 0 → hidden bit 4</span></p>
+        <p>Per questo il lab ora dà priorità a: singoli LSB plane, combinazione dei 4 LSB, ordini canale alternativi, offset bit e ricerca di magic bytes.</p>
+        <p>Magic bytes cercati: <span class="pill">PNG 89 50 4E 47</span><span class="pill">JPG FF D8 FF</span><span class="pill">ZIP 50 4B 03 04</span><span class="pill">GZIP 1F 8B</span><span class="pill">ZLIB 78 9C/DA/01</span><span class="pill">PDF 25 50 44 46</span></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const fileInput = document.getElementById('file');
+  const originalCanvas = document.getElementById('original');
+  const layerCanvas = document.getElementById('layer');
+  const hiddenCanvas = document.getElementById('hidden');
+  const meta = document.getElementById('meta');
+  const layerMeta = document.getElementById('layerMeta');
+  const hiddenMeta = document.getElementById('hiddenMeta');
+  const out = document.getElementById('out');
+  const stats = document.getElementById('stats');
+  const results = document.getElementById('results');
+  const diagResults = document.getElementById('diagResults');
+  const blobPreview = document.getElementById('blobPreview');
+  const previewInfo = document.getElementById('previewInfo');
+  const busyOverlay = document.getElementById('busyOverlay');
+  const busyMsg = document.getElementById('busyMsg');
+  let currentPreviewUrl = null;
+  let busyDepth = 0;
+
+  let imgData = null;
+  let width = 0;
+  let height = 0;
+
+  const q = id => document.getElementById(id);
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    await runWithBusy('Caricamento immagine e preparazione dei canvas...', async () => {
+      const bitmap = await createImageBitmap(file);
+      width = bitmap.width;
+      height = bitmap.height;
+
+      originalCanvas.width = width;
+      originalCanvas.height = height;
+      const ctx = originalCanvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(bitmap, 0, 0);
+      imgData = ctx.getImageData(0, 0, width, height);
+      meta.textContent = `${file.name} — ${width}×${height}px — ${Math.round(file.size / 1024)} KB`;
+      renderLayerPreview();
+      renderHiddenPreview();
+    });
+  });
+
+  q('preset').addEventListener('change', () => applyPreset(q('preset').value));
+
+  function applyPreset(preset) {
+    if (preset === 'lsbPayload') {
+      q('channels').value = 'RGB'; q('bits').value = '0,1,2,3'; q('bitOrder').value = 'MSB'; q('offset').value = 0; q('scan').value = 'row';
+    } else if (preset === 'singleLow') {
+      q('channels').value = 'R'; q('bits').value = '0'; q('bitOrder').value = 'MSB'; q('offset').value = 0; q('scan').value = 'row';
+    } else if (preset === 'hiddenImagePlanes') {
+      q('channels').value = 'RGB'; q('bits').value = '3,2,1,0'; q('bitOrder').value = 'MSB'; q('offset').value = 0; q('scan').value = 'row';
+    } else if (preset === 'msbControl') {
+      q('channels').value = 'RGB'; q('bits').value = '4,5,6,7'; q('bitOrder').value = 'MSB'; q('offset').value = 0; q('scan').value = 'row';
+    }
+    if (imgData) renderLayerPreview();
+  }
+
+  q('run').addEventListener('click', () => runWithBusy('Estrazione bitstream e conversione in byte...', async () => {
+    if (!ensureImage()) return;
+    const cfg = getConfig();
+    const bits = extractBits(cfg);
+    const bytes = bitsToBytes(bits, cfg.offset, cfg.bitOrder, cfg.trim);
+    const sliced = sliceBytes(bytes);
+    out.value = formatBytes(sliced, cfg.mode, bits);
+    stats.textContent = describe(bytes, bits, cfg);
+    renderLayerPreview();
+    activateTab('textTab');
+  }));
+
+  q('auto').addEventListener('click', () => runWithBusy('Scan delle combinazioni canale/bit/offset e ricerca magic bytes...', async () => {
+    if (!ensureImage()) return;
+    await autoScan();
+    activateTab('scanTab');
+  }));
+
+  q('diagnose').addEventListener('click', () => runWithBusy('Calcolo densità e transizioni dei bitplane...', async () => {
+    if (!ensureImage()) return;
+    await diagnoseLayers();
+    activateTab('diagTab');
+  }));
+
+  q('exportHidden').addEventListener('click', () => runWithBusy('Ricostruzione ed esportazione immagine dai 4 LSB...', async () => {
+    if (!ensureImage()) return;
+    renderHiddenPreview();
+    const a = document.createElement('a');
+    a.download = 'extracted_4lsb_payload.png';
+    a.href = hiddenCanvas.toDataURL('image/png');
+    a.click();
+  }));
+
+  q('extractManual').addEventListener('click', () => runWithBusy('Estrazione e download del blocco selezionato...', async () => {
+    if (!ensureImage()) return;
+    const { bytes } = getCurrentExtraction();
+    const start = Math.max(0, Number(q('blockStart').value || 0));
+    const end = Math.max(start, Number(q('blockEnd').value || bytes.length));
+    downloadBytes(bytes.slice(start, end), `stego_block_${start}_${end}.bin`);
+  }));
+
+  q('loadBlock').addEventListener('click', () => runWithBusy('Lettura e visualizzazione del blocco selezionato...', async () => {
+    if (!ensureImage()) return;
+    const { bytes, bits, cfg } = getCurrentExtraction();
+    const start = Math.max(0, Number(q('blockStart').value || 0));
+    const end = Math.max(start, Number(q('blockEnd').value || bytes.length));
+    const block = bytes.slice(start, end);
+    out.value = formatBytes(block, cfg.mode, bits);
+    stats.textContent = `blocco selezionato: ${start}..${end} — ${block.length} byte`;
+    activateTab('textTab');
+  }));
+
+  q('previewManual').addEventListener('click', () => runWithBusy('Preparazione anteprima del blocco selezionato...', async () => {
+    if (!ensureImage()) return;
+    const { bytes } = getCurrentExtraction();
+    const start = Math.max(0, Number(q('blockStart').value || 0));
+    const end = Math.max(start, Number(q('blockEnd').value || bytes.length));
+    previewCandidateBlock(bytes.slice(start, end), `manual_block_${start}_${end}`);
+  }));
+
+  ['channels','bits','bitOrder','offset','scan','mode','trim','textSearchMode'].forEach(id => q(id).addEventListener('change', () => {
+    q('preset').value = 'custom';
+    if (imgData) renderLayerPreview();
+  }));
+
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+  });
+
+  function activateTab(id) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+    ['textTab','scanTab','diagTab','previewTab','helpTab'].forEach(t => q(t).classList.toggle('hidden', t !== id));
+  }
+
+  function setBusy(isBusy, message = 'Attendere...') {
+    busyDepth += isBusy ? 1 : -1;
+    if (busyDepth < 0) busyDepth = 0;
+    busyMsg.textContent = message;
+    busyOverlay.classList.toggle('active', busyDepth > 0);
+    document.querySelectorAll('button, input, select').forEach(el => {
+      if (el.id !== 'file') el.disabled = busyDepth > 0;
+    });
+  }
+
+  async function runWithBusy(message, fn) {
+    setBusy(true, message);
+    try {
+      await yieldToBrowser();
+      return await fn();
+    } catch (err) {
+      console.error(err);
+      alert(`Errore durante l'elaborazione: ${err?.message || err}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function yieldToBrowser() {
+    return new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+  }
+
+  function ensureImage() {
+    if (!imgData) {
+      alert('Carica prima una immagine.');
+      return false;
+    }
+    return true;
+  }
+
+  function getConfig() {
+    return {
+      channels: q('channels').value,
+      bits: q('bits').value.split(',').map(Number),
+      bitOrder: q('bitOrder').value,
+      offset: Math.max(0, Math.min(7, Number(q('offset').value || 0))),
+      scan: q('scan').value,
+      mode: q('mode').value,
+      trim: q('trim').checked,
+      byteSkip: Math.max(0, Number(q('byteSkip').value || 0)),
+      byteLimit: Math.max(0, Number(q('byteLimit').value || 0)),
+      markers: q('markers').value.split(',').map(s => s.trim()).filter(Boolean),
+      textSearchMode: q('textSearchMode').value
+    };
+  }
+
+  function sliceBytes(bytes) {
+    const skip = Math.max(0, Number(q('byteSkip').value || 0));
+    const limit = Math.max(0, Number(q('byteLimit').value || 0));
+    return bytes.slice(skip, limit ? skip + limit : undefined);
+  }
+
+  function forEachPixelIndex(scan, cb) {
+    if (scan === 'row') {
+      for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) cb((y * width + x) * 4);
+    } else if (scan === 'rowReverse') {
+      for (let y = 0; y < height; y++) for (let x = width - 1; x >= 0; x--) cb((y * width + x) * 4);
+    } else if (scan === 'bottomUp') {
+      for (let y = height - 1; y >= 0; y--) for (let x = 0; x < width; x++) cb((y * width + x) * 4);
+    } else if (scan === 'col') {
+      for (let x = 0; x < width; x++) for (let y = 0; y < height; y++) cb((y * width + x) * 4);
+    } else if (scan === 'colReverse') {
+      for (let x = 0; x < width; x++) for (let y = height - 1; y >= 0; y--) cb((y * width + x) * 4);
+    }
+  }
+
+  function channelSequence(mode) {
+    const maps = {
+      R: [0], G: [1], B: [2], RG: [0,1], RB: [0,2], GB: [1,2], RGB: [0,1,2],
+      BGR: [2,1,0], GRB: [1,0,2], BRG: [2,0,1], GBR: [1,2,0], RBG: [0,2,1]
+    };
+    return maps[mode] || [0,1,2];
+  }
+
+  function extractBits(cfg) {
+    const data = imgData.data;
+    const orderBits = cfg.bitOrder === 'MSB' ? [...cfg.bits].sort((a,b) => b-a) : [...cfg.bits].sort((a,b) => a-b);
+    const bits = [];
+
+    if (cfg.channels === 'RRRGGGBBB') {
+      for (const c of [0,1,2]) {
+        forEachPixelIndex(cfg.scan, idx => {
+          const v = data[idx + c];
+          for (const b of orderBits) bits.push((v >> b) & 1);
+        });
+      }
+      return bits;
+    }
+
+    const chans = channelSequence(cfg.channels);
+    forEachPixelIndex(cfg.scan, idx => {
+      for (const c of chans) {
+        const v = data[idx + c];
+        for (const b of orderBits) bits.push((v >> b) & 1);
+      }
+    });
+    return bits;
+  }
+
+  function bitsToBytes(bits, offset, bitOrder, trim) {
+    const bytes = [];
+    const end = trim ? bits.length - ((bits.length - offset) % 8) : bits.length;
+    for (let i = offset; i + 7 < end; i += 8) {
+      let v = 0;
+      for (let j = 0; j < 8; j++) {
+        if (bitOrder === 'MSB') v = (v << 1) | bits[i + j];
+        else v |= bits[i + j] << j;
+      }
+      bytes.push(v);
+    }
+    return bytes;
+  }
+
+  function formatBytes(bytes, mode, bits) {
+    if (mode === 'bits') return bits.join('').replace(/(.{8})/g, '$1 ').trim();
+    if (mode === 'hex') return bytes.map((b, i) => b.toString(16).padStart(2, '0') + ((i+1)%16===0?'\n':' ')).join('').trim();
+    if (mode === 'latin1') return bytes.map(b => String.fromCharCode(b)).join('');
+    return bytes.map(b => (b >= 32 && b <= 126) || b === 10 || b === 13 || b === 9 ? String.fromCharCode(b) : '.').join('');
+  }
+
+  function describe(bytes, bits, cfg) {
+    const score = scoreBytes(bytes.slice(0, 20000), cfg.markers, cfg.textSearchMode);
+    const magic = findMagic(bytes).map(m => `${m.name}@${m.pos}${m.end ? '..'+m.end : ''}${m.confidence ? ' '+m.confidence : ''}`).join(', ') || 'nessuno';
+    return `bit estratti: ${bits.length.toLocaleString()} — byte: ${bytes.length.toLocaleString()} — printable: ${(score.printableRatio*100).toFixed(1)}% — alnum: ${(score.alnumRatio*100).toFixed(1)}% — italiano compatto: ${score.italianHits} — score: ${score.total.toFixed(1)} — magic/block: ${magic}`;
+  }
+
+  function scoreBytes(bytes, markers, textSearchMode = 'standard') {
+    if (!bytes.length) return { total: 0, printableRatio: 0, markerHits: 0, magicHits: 0, alnumRatio: 0, italianHits: 0, compactRun: 0 };
+    let printable = 0, alpha = 0, spaces = 0, controls = 0, base64ish = 0, alnum = 0;
+    for (const b of bytes) {
+      if ((b >= 32 && b <= 126) || b === 10 || b === 13 || b === 9) printable++;
+      if ((b >= 65 && b <= 90) || (b >= 97 && b <= 122)) alpha++;
+      if ((b >= 65 && b <= 90) || (b >= 97 && b <= 122) || (b >= 48 && b <= 57)) alnum++;
+      if (b === 32 || b === 10 || b === 13 || b === 9) spaces++;
+      if (b < 9 || (b > 13 && b < 32) || b === 127) controls++;
+      if ((b >= 65 && b <= 90) || (b >= 97 && b <= 122) || (b >= 48 && b <= 57) || b === 43 || b === 47 || b === 61) base64ish++;
+    }
+    const text = bytes.map(b => b >= 32 && b <= 126 ? String.fromCharCode(b) : ' ').join('');
+    const compactText = bytes.map(b => ((b >= 65 && b <= 90) || (b >= 97 && b <= 122) || (b >= 48 && b <= 57)) ? String.fromCharCode(b).toLowerCase() : ' ').join('');
+    let markerHits = 0;
+    for (const m of markers) {
+      const re = new RegExp(escapeRegExp(m), 'gi');
+      const hits = (textSearchMode === 'italianCompact' || textSearchMode === 'alnumCompact' ? compactText : text).match(re);
+      if (hits) markerHits += hits.length;
+    }
+    const magicHits = findMagic(bytes).length;
+    const printableRatio = printable / bytes.length;
+    const alphaRatio = alpha / bytes.length;
+    const alnumRatio = alnum / bytes.length;
+    const spaceRatio = spaces / bytes.length;
+    const controlRatio = controls / bytes.length;
+    const base64Ratio = base64ish / bytes.length;
+    const compactRun = longestCompactRun(compactText);
+    const italianHits = countItalianCompactHints(compactText);
+    let total = printableRatio * 42 + alphaRatio * 18 + Math.min(spaceRatio, .22) * 35 + markerHits * 14 + magicHits * 35 + (base64Ratio > .82 ? 12 : 0) - controlRatio * 55;
+    if (textSearchMode === 'alnumCompact') {
+      total = alnumRatio * 70 + Math.min(compactRun / 80, 1) * 28 + markerHits * 16 + magicHits * 25 - spaceRatio * 18 - controlRatio * 70;
+    } else if (textSearchMode === 'italianCompact') {
+      total = alnumRatio * 48 + alphaRatio * 18 + Math.min(compactRun / 100, 1) * 22 + italianHits * 9 + markerHits * 18 + magicHits * 20 - spaceRatio * 10 - controlRatio * 75;
+    }
+    return { total, printableRatio, alphaRatio, alnumRatio, spaceRatio, controlRatio, markerHits, magicHits, base64Ratio, italianHits, compactRun };
+  }
+
+  function longestCompactRun(compactText) {
+    let best = 0, cur = 0;
+    for (const ch of compactText) {
+      if (/[a-z0-9]/.test(ch)) { cur++; if (cur > best) best = cur; }
+      else cur = 0;
+    }
+    return best;
+  }
+
+  function countItalianCompactHints(compactText) {
+    const joined = compactText.replace(/\s+/g, ' ');
+    const hints = ['che','non','per','con','del','della','delle','degli','alla','alle','gli','una','uno','questo','questa','messaggio','testo','segreto','nascosto','sono','come','dove','quando','domani','inviare','rinforzi','attacco','coordinate','operazione'];
+    let score = 0;
+    for (const h of hints) {
+      const m = joined.match(new RegExp(escapeRegExp(h), 'g'));
+      if (m) score += Math.min(m.length, 6);
+    }
+    const ngrams = ['zione','mento','mente','dell','alla','ella','ione','iamo','are','ere','ire'];
+    for (const n of ngrams) {
+      const m = joined.match(new RegExp(escapeRegExp(n), 'g'));
+      if (m) score += Math.min(m.length, 4);
+    }
+    return score;
+  }
+
+  function findMagic(bytes) {
+    const sigs = [
+      { name: 'PNG', ext: 'png', sig: [0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A] },
+      { name: 'JPG', ext: 'jpg', sig: [0xFF,0xD8,0xFF] },
+      { name: 'ZIP', ext: 'zip', sig: [0x50,0x4B,0x03,0x04] },
+      { name: 'GZIP', ext: 'gz', sig: [0x1F,0x8B,0x08] },
+      { name: 'PDF', ext: 'pdf', sig: [0x25,0x50,0x44,0x46] },
+      { name: 'ZLIB-78-9C', ext: 'zlib', sig: [0x78,0x9C] },
+      { name: 'ZLIB-78-DA', ext: 'zlib', sig: [0x78,0xDA] },
+      { name: 'ZLIB-78-01', ext: 'zlib', sig: [0x78,0x01] }
+    ];
+    const found = [];
+    const maxScan = Math.min(bytes.length, 300000);
+    for (const s of sigs) {
+      outer: for (let i = 0; i <= maxScan - s.sig.length; i++) {
+        for (let j = 0; j < s.sig.length; j++) if (bytes[i+j] !== s.sig[j]) continue outer;
+        const block = locateBlock(bytes, i, s.name);
+        found.push({ name: s.name, ext: s.ext, pos: i, ...block });
+        break;
+      }
+    }
+    return found;
+  }
+
+  function locateBlock(bytes, start, name) {
+    if (name === 'JPG') {
+      for (let i = start + 3; i < bytes.length - 1; i++) {
+        if (bytes[i] === 0xFF && bytes[i+1] === 0xD9) return { end: i + 2, confidence: 'SOI+EOI' };
+      }
+      return { end: nextMagicOrEnd(bytes, start + 3), confidence: 'SOI only' };
+    }
+    if (name === 'PNG') {
+      const end = locatePngEnd(bytes, start);
+      return end ? { end, confidence: 'signature+IEND' } : { end: nextMagicOrEnd(bytes, start + 8), confidence: 'signature only' };
+    }
+    if (name === 'ZIP') {
+      const end = locateZipEnd(bytes, start);
+      return end ? { end, confidence: 'local header+EOCD' } : { end: nextMagicOrEnd(bytes, start + 4), confidence: 'local header only' };
+    }
+    if (name === 'PDF') {
+      for (let i = start + 4; i < bytes.length - 4; i++) {
+        if (bytes[i] === 0x25 && bytes[i+1] === 0x25 && bytes[i+2] === 0x45 && bytes[i+3] === 0x4F && bytes[i+4] === 0x46) {
+          let j = i + 5;
+          while (j < bytes.length && (bytes[j] === 0x0D || bytes[j] === 0x0A || bytes[j] === 0x20)) j++;
+          return { end: j, confidence: '%PDF+%%EOF' };
+        }
+      }
+      return { end: nextMagicOrEnd(bytes, start + 4), confidence: '%PDF only' };
+    }
+    if (name === 'GZIP') return { end: nextMagicOrEnd(bytes, start + 3), confidence: 'no fixed EOF; until next magic/end' };
+    if (name.startsWith('ZLIB')) return { end: nextMagicOrEnd(bytes, start + 2), confidence: 'no fixed EOF; until next magic/end' };
+    return { end: nextMagicOrEnd(bytes, start + 1), confidence: 'unknown end' };
+  }
+
+  function locatePngEnd(bytes, start) {
+    let p = start + 8;
+    while (p + 12 <= bytes.length) {
+      const len = readU32BE(bytes, p);
+      const type = String.fromCharCode(bytes[p+4], bytes[p+5], bytes[p+6], bytes[p+7]);
+      const next = p + 12 + len;
+      if (!Number.isFinite(len) || len < 0 || next > bytes.length) return null;
+      if (type === 'IEND') return next;
+      p = next;
+    }
+    return null;
+  }
+
+  function locateZipEnd(bytes, start) {
+    for (let i = bytes.length - 22; i >= start + 4; i--) {
+      if (bytes[i] === 0x50 && bytes[i+1] === 0x4B && bytes[i+2] === 0x05 && bytes[i+3] === 0x06) {
+        const commentLen = bytes[i+20] | (bytes[i+21] << 8);
+        const end = i + 22 + commentLen;
+        if (end <= bytes.length) return end;
+      }
+    }
+    return null;
+  }
+
+  function nextMagicOrEnd(bytes, from) {
+    const starters = [[0x89,0x50,0x4E,0x47],[0xFF,0xD8,0xFF],[0x50,0x4B,0x03,0x04],[0x1F,0x8B,0x08],[0x25,0x50,0x44,0x46],[0x78,0x9C],[0x78,0xDA],[0x78,0x01]];
+    let best = bytes.length;
+    for (const sig of starters) {
+      outer: for (let i = from; i <= bytes.length - sig.length; i++) {
+        for (let j = 0; j < sig.length; j++) if (bytes[i+j] !== sig[j]) continue outer;
+        best = Math.min(best, i);
+        break;
+      }
+    }
+    return best;
+  }
+
+  function readU32BE(bytes, p) {
+    return ((bytes[p] << 24) >>> 0) + (bytes[p+1] << 16) + (bytes[p+2] << 8) + bytes[p+3];
+  }
+
+  function getCurrentExtraction() {
+    const cfg = getConfig();
+    const bits = extractBits(cfg);
+    const bytes = bitsToBytes(bits, cfg.offset, cfg.bitOrder, cfg.trim);
+    return { cfg, bits, bytes };
+  }
+
+  function downloadBytes(bytes, filename) {
+    if (!bytes.length) { alert('Blocco vuoto.'); return; }
+    const blob = new Blob([new Uint8Array(bytes)], { type: 'application/octet-stream' });
+    const a = document.createElement('a');
+    a.download = filename;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  function detectMime(bytes) {
+    if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) return { mime: 'image/png', kind: 'image', ext: 'png' };
+    if (bytes.length >= 3 && bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) return { mime: 'image/jpeg', kind: 'image', ext: 'jpg' };
+    if (bytes.length >= 4 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) return { mime: 'image/gif', kind: 'image', ext: 'gif' };
+    if (bytes.length >= 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return { mime: 'image/webp', kind: 'image', ext: 'webp' };
+    if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) return { mime: 'application/pdf', kind: 'pdf', ext: 'pdf' };
+    if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04) return { mime: 'application/zip', kind: 'zip', ext: 'zip' };
+    if (bytes.length >= 3 && bytes[0] === 0x1F && bytes[1] === 0x8B && bytes[2] === 0x08) return { mime: 'application/gzip', kind: 'gzip', ext: 'gz' };
+    if (bytes.length >= 2 && bytes[0] === 0x78 && [0x01,0x9C,0xDA].includes(bytes[1])) return { mime: 'application/zlib', kind: 'zlib', ext: 'zlib' };
+    return { mime: 'application/octet-stream', kind: 'binary', ext: 'bin' };
+  }
+
+  function previewCandidateBlock(bytes, label) {
+    if (currentPreviewUrl) URL.revokeObjectURL(currentPreviewUrl);
+    if (!bytes.length) {
+      previewInfo.textContent = 'Blocco vuoto.';
+      blobPreview.innerHTML = '<pre>Blocco vuoto.</pre>';
+      activateTab('previewTab');
+      return;
+    }
+    const detected = detectMime(bytes);
+    const blob = new Blob([new Uint8Array(bytes)], { type: detected.mime });
+    currentPreviewUrl = URL.createObjectURL(blob);
+    previewInfo.textContent = `${label} — ${bytes.length} byte — tipo rilevato: ${detected.mime}`;
+
+    if (detected.kind === 'image') {
+      blobPreview.innerHTML = `<img src="${currentPreviewUrl}" alt="Anteprima immagine estratta" onerror="this.replaceWith(document.createTextNode('Impossibile visualizzare l’immagine: blocco corrotto o falso positivo.'))">`;
+    } else if (detected.kind === 'pdf') {
+      blobPreview.innerHTML = `<iframe src="${currentPreviewUrl}" title="Anteprima PDF estratto"></iframe>`;
+    } else {
+      const hex = formatBytes(bytes.slice(0, 4096), 'hex', []);
+      const ascii = formatBytes(bytes.slice(0, 2048), 'ascii', []);
+      blobPreview.innerHTML = `<pre>Anteprima visuale non disponibile per ${detected.mime}.
+
+HEX iniziale:
+${htmlEscape(hex)}
+
+ASCII iniziale:
+${htmlEscape(ascii)}</pre>`;
+    }
+    activateTab('previewTab');
+  }
+
+  function escapeRegExp(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  async function autoScan() {
+    const preset = q('preset').value;
+    const markers = q('markers').value.split(',').map(s => s.trim()).filter(Boolean);
+    const textSearchMode = q('textSearchMode').value;
+    const bitOrders = ['MSB','LSB'];
+    const scans = ['row','rowReverse','bottomUp','col','colReverse'];
+    let channelOpts = ['RGB','R','G','B','BGR','GRB','RBG','RRRGGGBBB'];
+    let bitOpts = [[0],[1],[2],[3],[0,1,2,3],[3,2,1,0]];
+
+    if (preset === 'msbControl') bitOpts = [[4],[5],[6],[7],[4,5,6,7]];
+    if (preset === 'singleLow') { channelOpts = ['R','G','B','RGB','BGR']; bitOpts = [[0],[1],[2],[3]]; }
+    if (preset === 'hiddenImagePlanes') bitOpts = [[3],[2],[1],[0],[3,2,1,0],[0,1,2,3]];
+
+    const rows = [];
+    let tested = 0;
+    for (const channels of channelOpts) {
+      for (const bits of bitOpts) {
+        for (const bitOrder of bitOrders) {
+          for (const scan of scans) {
+            const baseCfg = { channels, bits, bitOrder, scan, markers, trim: true, textSearchMode };
+            const rawBits = extractBits({ ...baseCfg, offset: 0 });
+            for (let offset = 0; offset < 8; offset++) {
+              const bytes = bitsToBytes(rawBits, offset, bitOrder, true);
+              const sample = bytes.slice(0, 16000);
+              const score = scoreBytes(sample, markers, textSearchMode);
+              const magic = findMagic(bytes).slice(0, 4);
+              const preview = formatBytes(bytes.slice(0, 520), 'ascii', rawBits);
+              rows.push({ score, cfg: { ...baseCfg, offset }, preview, magic });
+              tested++;
+              if (tested % 24 === 0) {
+                busyMsg.textContent = `Scan in corso... configurazioni testate: ${tested}`;
+                await yieldToBrowser();
+              }
+            }
+          }
+        }
+      }
+    }
+
+    rows.sort((a, b) => b.score.total - a.score.total);
+    results.innerHTML = rows.slice(0, 80).map(r => {
+      const cls = r.score.total > 75 ? 'scoreGood' : r.score.total > 48 ? 'scoreMid' : 'scoreBad';
+      const cfg = `canali=${r.cfg.channels}, bit=${r.cfg.bits.join(',')}, ordine=${r.cfg.bitOrder}, offset=${r.cfg.offset}, scan=${r.cfg.scan}`;
+      const indizi = [
+        `print ${(r.score.printableRatio*100).toFixed(0)}%`,
+        `alnum ${(r.score.alnumRatio*100).toFixed(0)}%`,
+        `run ${r.score.compactRun}`,
+        `ita ${r.score.italianHits}`,
+        `base64 ${(r.score.base64Ratio*100).toFixed(0)}%`,
+        `marker ${r.score.markerHits}`,
+        r.magic.length ? `magic ${r.magic.map(m => m.name+'@'+m.pos+(m.end?'..'+m.end:'')).join(', ')}` : 'magic -'
+      ].join('<br>');
+      const blocks = r.magic.length
+        ? r.magic.map(m => `<div class="mono">${m.name}: ${m.pos}..${m.end || '?'}<br><span class="small">${m.confidence || ''}</span><br><button class="miniBtn" data-block='${JSON.stringify({cfg:r.cfg,start:m.pos,end:m.end || 0,ext:m.ext,name:m.name})}'>Estrai</button><button class="miniBtn" data-showblock='${JSON.stringify({cfg:r.cfg,start:m.pos,end:m.end || 0})}'>Mostra</button><button class="miniBtn" data-previewblock='${JSON.stringify({cfg:r.cfg,start:m.pos,end:m.end || 0,name:m.name,ext:m.ext})}'>Anteprima</button></div>`).join('')
+        : '<span class="small">nessun blocco</span>';
+      return `<tr>
+        <td class="${cls}">${r.score.total.toFixed(1)}</td>
+        <td>${cfg}<br><button class="tab" data-load='${JSON.stringify(r.cfg)}'>Carica</button></td>
+        <td>${indizi}</td>
+        <td>${blocks}</td>
+        <td><pre style="white-space:pre-wrap;margin:0;max-height:130px;overflow:auto">${htmlEscape(r.preview)}</pre></td>
+      </tr>`;
+    }).join('');
+
+    results.querySelectorAll('[data-load]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cfg = JSON.parse(btn.dataset.load);
+        q('channels').value = cfg.channels;
+        q('bits').value = cfg.bits.join(',');
+        q('bitOrder').value = cfg.bitOrder;
+        q('offset').value = cfg.offset;
+        q('scan').value = cfg.scan;
+        q('mode').value = 'ascii';
+        q('trim').checked = true;
+        const bits = extractBits(cfg);
+        const bytes = bitsToBytes(bits, cfg.offset, cfg.bitOrder, true);
+        const sliced = sliceBytes(bytes);
+        out.value = formatBytes(sliced, 'ascii', bits);
+        stats.textContent = describe(bytes, bits, { ...cfg, mode: 'ascii', textSearchMode: q('textSearchMode').value });
+        renderLayerPreview();
+        activateTab('textTab');
+      });
+    });
+
+    results.querySelectorAll('[data-block]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const b = JSON.parse(btn.dataset.block);
+        const bits = extractBits(b.cfg);
+        const bytes = bitsToBytes(bits, b.cfg.offset, b.cfg.bitOrder, true);
+        const end = b.end && b.end > b.start ? b.end : bytes.length;
+        q('blockStart').value = b.start;
+        q('blockEnd').value = end;
+        downloadBytes(bytes.slice(b.start, end), `candidate_${b.name}_${b.start}_${end}.${b.ext || 'bin'}`);
+      });
+    });
+
+    results.querySelectorAll('[data-showblock]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const b = JSON.parse(btn.dataset.showblock);
+        const bits = extractBits(b.cfg);
+        const bytes = bitsToBytes(bits, b.cfg.offset, b.cfg.bitOrder, true);
+        const end = b.end && b.end > b.start ? b.end : bytes.length;
+        q('blockStart').value = b.start;
+        q('blockEnd').value = end;
+        q('channels').value = b.cfg.channels;
+        q('bits').value = b.cfg.bits.join(',');
+        q('bitOrder').value = b.cfg.bitOrder;
+        q('offset').value = b.cfg.offset;
+        q('scan').value = b.cfg.scan;
+        out.value = formatBytes(bytes.slice(b.start, end), 'hex', bits);
+        stats.textContent = `blocco candidato: ${b.start}..${end} — ${end - b.start} byte`;
+        activateTab('textTab');
+      });
+    });
+
+    results.querySelectorAll('[data-previewblock]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const b = JSON.parse(btn.dataset.previewblock);
+        const bits = extractBits(b.cfg);
+        const bytes = bitsToBytes(bits, b.cfg.offset, b.cfg.bitOrder, true);
+        const end = b.end && b.end > b.start ? b.end : bytes.length;
+        q('blockStart').value = b.start;
+        q('blockEnd').value = end;
+        q('channels').value = b.cfg.channels;
+        q('bits').value = b.cfg.bits.join(',');
+        q('bitOrder').value = b.cfg.bitOrder;
+        q('offset').value = b.cfg.offset;
+        q('scan').value = b.cfg.scan;
+        previewCandidateBlock(bytes.slice(b.start, end), `${b.name}_${b.start}_${end}.${b.ext || 'bin'}`);
+      });
+    });
+  }
+
+  async function diagnoseLayers() {
+    const rows = [];
+    for (const c of ['R','G','B']) {
+      for (let b = 0; b < 8; b++) {
+        const m = layerMetrics(c, b);
+        let interp = '';
+        if (b <= 3 && m.ones > .42 && m.ones < .58 && m.transitions > .35) interp = 'LSB rumoroso/candidato payload';
+        else if (b <= 3) interp = 'LSB con possibile struttura payload/immagine';
+        else if (m.transitions < .28) interp = 'MSB con forte struttura cover';
+        else interp = 'Controllo: probabile informazione visuale cover';
+        rows.push({ layer: `${c} bit ${b}`, ...m, interp });
+        if (rows.length % 6 === 0) {
+          busyMsg.textContent = `Diagnosi layer in corso... ${rows.length}/24`;
+          await yieldToBrowser();
+        }
+      }
+    }
+    diagResults.innerHTML = rows.map(r => `<tr><td>${r.layer}</td><td>${(r.ones*100).toFixed(1)}%</td><td>${(r.transitions*100).toFixed(1)}%</td><td>${r.interp}</td></tr>`).join('');
+  }
+
+  function layerMetrics(channel, bit) {
+    const c = { R:0, G:1, B:2 }[channel];
+    const data = imgData.data;
+    let ones = 0, total = width * height, trans = 0, pairs = 0;
+    for (let y = 0; y < height; y++) {
+      let prev = null;
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+        const v = (data[idx + c] >> bit) & 1;
+        ones += v;
+        if (prev !== null) { trans += (prev !== v) ? 1 : 0; pairs++; }
+        prev = v;
+      }
+    }
+    return { ones: ones / total, transitions: pairs ? trans / pairs : 0 };
+  }
+
+  function htmlEscape(s) {
+    return s.replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  }
+
+  function renderLayerPreview() {
+    if (!imgData) return;
+    const cfg = getConfig();
+    layerCanvas.width = width;
+    layerCanvas.height = height;
+    const ctx = layerCanvas.getContext('2d');
+    const src = imgData.data;
+    const dst = ctx.createImageData(width, height);
+    const chans = cfg.channels === 'RRRGGGBBB' ? [0,1,2] : channelSequence(cfg.channels);
+    for (let i = 0; i < src.length; i += 4) {
+      let acc = 0;
+      let count = 0;
+      for (const c of chans) {
+        for (const b of cfg.bits) {
+          acc += ((src[i+c] >> b) & 1) ? 255 : 0;
+          count++;
+        }
+      }
+      const v = Math.round(acc / Math.max(1, count));
+      dst.data[i] = dst.data[i+1] = dst.data[i+2] = v;
+      dst.data[i+3] = 255;
+    }
+    ctx.putImageData(dst, 0, 0);
+    layerMeta.textContent = `Anteprima: canali ${cfg.channels}, bit ${cfg.bits.join(',')}`;
+  }
+
+  function renderHiddenPreview() {
+    if (!imgData) return;
+    hiddenCanvas.width = width;
+    hiddenCanvas.height = height;
+    const ctx = hiddenCanvas.getContext('2d');
+    const src = imgData.data;
+    const dst = ctx.createImageData(width, height);
+    for (let i = 0; i < src.length; i += 4) {
+      dst.data[i] = (src[i] & 0x0F) << 4;
+      dst.data[i+1] = (src[i+1] & 0x0F) << 4;
+      dst.data[i+2] = (src[i+2] & 0x0F) << 4;
+      dst.data[i+3] = 255;
+    }
+    ctx.putImageData(dst, 0, 0);
+    hiddenMeta.textContent = 'Ricostruzione payload dai 4 LSB RGB. Analizza poi i singoli bit 0-3 se cerchi testo.';
+  }
+})();
+</script>
+</body>
+</html>

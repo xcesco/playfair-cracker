@@ -1,0 +1,14 @@
+[project]
+name = "playfair-cracker"
+version = "0.1.0"
+description = "Playfair cipher cracker using Simulated Annealing with n-gram scoring"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24.0",
+    "numba>=0.57.0",
+    "tqdm>=4.65.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
