@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Playfair Cracker — Tools Lab</title>
+<style>
+:root{--bg:#0f172a;--panel:#111827;--muted:#94a3b8;--text:#e5e7eb;--accent:#38bdf8;--accent2:#a78bfa;--border:rgba(148,163,184,.24);--good:#34d399;--warn:#fbbf24;--radius:18px;--sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);background:radial-gradient(circle at 20% 10%,rgba(56,189,248,.14),transparent 30%),radial-gradient(circle at 80% 0,rgba(167,139,250,.14),transparent 28%),var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+header{padding:26px clamp(16px,4vw,42px) 15px;border-bottom:1px solid var(--border);background:rgba(15,23,42,.76);backdrop-filter:blur(12px)}
+h1{margin:0;font-size:clamp(1.5rem,3vw,2.3rem);letter-spacing:-.03em}
+.subtitle{margin:8px 0 0;color:var(--muted);max-width:1250px;line-height:1.45}
+main{flex:1;padding:42px clamp(16px,4vw,42px);display:flex;align-items:center;justify-content:center}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px;max-width:1100px;width:100%}
+.tool-card{background:linear-gradient(180deg,rgba(17,24,39,.96),rgba(15,23,42,.96));border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 18px 50px rgba(0,0,0,.28);overflow:hidden;transition:transform .2s ease,box-shadow .2s ease;text-decoration:none;color:inherit}
+.tool-card:hover{transform:translateY(-4px);box-shadow:0 24px 64px rgba(0,0,0,.38),0 0 0 1px rgba(56,189,248,.32)}
+.tool-header{padding:24px 22px 20px;background:linear-gradient(135deg,rgba(56,189,248,.12),rgba(167,139,250,.12));border-bottom:1px solid var(--border)}
+.tool-icon{font-size:2.4rem;margin-bottom:12px;display:inline-block}
+.tool-title{margin:0 0 8px;font-size:1.3rem;font-weight:800;color:var(--text)}
+.tool-desc{margin:0;color:var(--muted);font-size:.9rem;line-height:1.5}
+.tool-body{padding:20px 22px 24px}
+.tool-features{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.tool-features li{padding:0;color:var(--muted);font-size:.88rem;line-height:1.4;display:flex;align-items:flex-start;gap:8px}
+.tool-features li:before{content:"→";color:var(--accent);font-weight:900;flex-shrink:0}
+.tool-link{display:inline-block;margin-top:18px;padding:11px 20px;background:linear-gradient(135deg,rgba(56,189,248,.95),rgba(167,139,250,.95));color:#07111f;border-radius:13px;font-weight:800;text-decoration:none;transition:transform .15s ease}
+.tool-link:hover{transform:scale(1.04)}
+footer{padding:20px;text-align:center;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border);background:rgba(15,23,42,.5)}
+@media(max-width:800px){.tools-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔐 Playfair Cracker — Tools Lab</h1>
+  <p class="subtitle">Suite di strumenti JavaScript per analisi crittografica avanzata: decifratura Playfair con ipotesi manuali e steganografia LSB/MSB per payload su immagini.</p>
+</header>
+
+<main>
+  <div class="tools-grid">
+
+    <article class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">🔤</div>
+        <h2 class="tool-title">Playfair Digram Lab</h2>
+        <p class="tool-desc">Analisi interattiva di crittogrammi Playfair con gestione digrammi, sequenze ricorrenti e ipotesi guidate</p>
+      </div>
+      <div class="tool-body">
+        <ul class="tool-features">
+          <li>Analisi automatica digrammi cifrati e frequenze</li>
+          <li>Gestione ipotesi manuali con drag & drop</li>
+          <li>Assegnazione digrammi italiani frequenti</li>
+          <li>Sequenze ricorrenti filtrabili per lunghezza</li>
+          <li>Validazione strutturale Playfair (doppi, stesso rigo/colonna)</li>
+          <li>Export/import configurazioni e ipotesi</li>
+        </ul>
+        <a href="playfair_digram_lab_v30.html" class="tool-link">Apri Playfair Lab →</a>
+      </div>
+    </article>
+
+    <article class="tool-card">
+      <div class="tool-header">
+        <div class="tool-icon">🖼️</div>
+        <h2 class="tool-title">Stego Text Lab</h2>
+        <p class="tool-desc">Laboratorio di steganografia per nascondere e estrarre testo in immagini con tecniche LSB/MSB e secondo livello</p>
+      </div>
+      <div class="tool-body">
+        <ul class="tool-features">
+          <li>Embedding LSB e MSB su canali RGB separati</li>
+          <li>Estrazione payload con preview visivo</li>
+          <li>Supporto secondo livello steganografico</li>
+          <li>Visualizzazione differenze bit-level</li>
+          <li>Controllo capacità massima per immagine</li>
+          <li>Export immagini modificate (PNG)</li>
+        </ul>
+        <a href="msb_half_stego_text_lab.html" class="tool-link">Apri Stego Lab →</a>
+      </div>
+    </article>
+
+  </div>
+</main>
+
+<footer>
+  <p>Playfair Cracker Tools — <a href="https://github.com/xcesco/playfair-cracker" style="color:var(--accent);text-decoration:none">GitHub Repository</a></p>
+</footer>
+
+</body>
+</html>
