@@ -305,6 +305,11 @@ Verificare che i file `.npy` nella directory n-grammi siano per alfabeto 25 lett
 ## Documentazione
 Per la documentaizone si consulti [INDICE_DOCUMENTAZIONE.md](INDICE_DOCUMENTAZIONE.md)
 
+## Strumenti aggiuntivi
+Su https://xcesco.github.io/playfair-cracker/ sono inoltre disponibi:
+- 
+
+
 ## Licenza
 
 MIT License
